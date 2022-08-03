@@ -1,7 +1,13 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-project(eclibc VERSION 1.0.0 DESCRIPTION "FOSS C library used in software \
+set(Developement 0)
+set(Nightly      1)
+set(Alpha        2)
+set(Beta         3)
+set(Release      4)
+
+project(eclibc VERSION 1.0.0.${Developement} DESCRIPTION "FOSS C library used in software \
 developed by https://github.com/ExoticCandyC")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
