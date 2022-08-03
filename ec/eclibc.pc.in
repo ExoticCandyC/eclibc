@@ -1,0 +1,13 @@
+prefix=/
+exec_prefix=/usr/bin
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: @PROJECT_NAME@
+Description: @PROJECT_DESCRIPTION@
+Version: @PROJECT_VERSION@
+
+Requires:
+Libs: -L/usr/lib -leclibc
+Cflags: -I/usr/include
+
