@@ -35,6 +35,7 @@
 
 ## Dependencies
 
+💠️ git: used to clone the repository<br />
 💠️ cmake: used to generate the make scripts<br />
 💠️ A C compiler of choice<br />
 <br />
