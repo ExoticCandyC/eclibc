@@ -74,8 +74,3 @@ As of August 2022, there are no plans to enable official support for Microsoft W
 Wiki pages are planned to be added to the git repository, and an official website is planned to be generated that will host a begginer friendly C tutorial, beginner friendly C++ tutorial and a comprehensive guide on how to use eclibc in both C and C++<br />
 Considering my tight schedule and the fact that this project is a solo project, there is no expected date for the aforementioned documentations.
 
-
-
-
-
-
