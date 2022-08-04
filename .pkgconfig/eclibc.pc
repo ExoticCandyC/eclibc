@@ -5,7 +5,7 @@ includedir=/usr/include
 
 Name: eclibc
 Description: FOSS C library used in software developed by https://github.com/ExoticCandyC
-Version: 1.0.0
+Version: 1.0.0.0
 
 Requires:
 Libs: -L/usr/lib -leclibc

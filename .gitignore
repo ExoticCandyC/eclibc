@@ -43,3 +43,5 @@ install_manifest.txt
 libeclibc.s*
 Makefile
 CMakeLists.txt.user
+ec_install
+
