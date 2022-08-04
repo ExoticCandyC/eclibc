@@ -2,7 +2,7 @@
 <h1 align="center">ExoticCandy C Collection</h1>
 <h3 align="center">Shared C library for the common needs of any C projects</h3>
 <h4 align="center">Free and Open Source library, used in all ECC softwares</h4>
-
+<br />
 <p align="center">
 <img src="https://img.shields.io/badge/License-GNU%20GPL%20v3.0-blueviolet?style=plastic&color=A10AA1&logo=gnu" />
 <img src="https://img.shields.io/badge/Language-C-pink?style=plastic&color=blueviolet&logo=c" />
