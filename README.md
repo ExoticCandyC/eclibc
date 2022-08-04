@@ -31,10 +31,9 @@
 🔸 xc16-gcc<br />
 🔸 xc32-gcc<br />
 
----
 
 ## Dependencies
 
 💠️ cmake: used to generate the make scripts<br />
-💠️ GCC: For computer targets<br />
-💠️ MPLAB® XC16: For Micochip© 16bit PIC/dsPIC micro processor units<br />
+💠️ A C compiler of choice<br />
+<br />
