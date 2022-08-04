@@ -1,6 +1,6 @@
 ![alt text](media/banner.png)
 <h1 align="center">ExoticCandy C Collection</h1>
-<h3 align="center">Shared C library for common needs of any C projects</h3>
+<h3 align="center">Shared C library for the common needs of any C projects</h3>
 <h4 align="center">Free and Open Source library, used in all ECC softwares</h4>
 
 
@@ -58,14 +58,14 @@ Basically since the library is targeted for C89 (ANSI) standard, and compiled us
 As an example, Micochip© XC8 doesn't have an implementation of "free" and "malloc" functions. So it will produce errors during compilation.
 
 The testings and developements are done on:<br />
-1️⃣ Arch Linux and Gentoo Linux, on X86-64 architecture, using GCC, Clang and TCC compilers.<br />
-2️⃣ Arch Linux, using xtensa-esp32-elf-gcc compiler for ESP32 target.<br />
-3️⃣ Arch Linux, using Micochip© XC16 for PIC24FJ256GA106 micro-controller unit and dsPIC33CK256MP406 micro-controller unit.<br />
-4️⃣ Gentoo Linux on Raspberry Pi 4.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1️⃣ Arch Linux and Gentoo Linux, on X86-64 architecture, using GCC, Clang and TCC compilers.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2️⃣ Arch Linux, using xtensa-esp32-elf-gcc compiler for ESP32 target.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3️⃣ Arch Linux, using Micochip© XC16 for PIC24FJ256GA106 micro-controller unit and dsPIC33CK256MP406 micro-controller unit.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4️⃣ Gentoo Linux on Raspberry Pi 4.<br />
 
-Since the standard C protocols are being followed, and CMake is available on most platforms, one should easily be able to compile this library on any other target include FreeBSD, OpenBSD, OSX. 
+Since the standard C protocols are being followed, and CMake is available on most platforms, one should easily be able to compile this library on any other target including FreeBSD, OpenBSD, OSX. 
 
-As of August 2022, there are no plans to enable official support for Microsoft Windows®. But generally speaking, making the library compatible with MinGW32-GCC is a future goal and that would enable the support for Microsoft Windows® targets.
+As of August 2022, there are no plans to enable official support for Microsoft Windows®. But generally speaking, making the library compatible with MinGW32-GCC is a future goal and that would enable the unofficial support for Microsoft Windows® targets.
 
 
 
