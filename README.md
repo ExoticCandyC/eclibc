@@ -20,10 +20,12 @@
 🔹 TCC<br />
 🔹 ICC<br />
 🔹 MinGW32-GCC<br />
+
 **Espressif targets:**<br />
 🔸 xtensa-esp32-elf-gcc<br />
 🔸 xtensa-esp32s2-elf-gcc<br />
 🔸 xtensa-esp32s2-elf-gcc<br />
+
 **Micochip© micro-processor units:**<br />
 🔸 xc16-gcc<br />
 🔸 xc32-gcc<br />
