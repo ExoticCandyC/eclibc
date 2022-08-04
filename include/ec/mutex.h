@@ -32,10 +32,19 @@ extern "C"
 {
 #endif
 
+/* Since different compilers and different platforms implement NULL in a
+ * different manner, EC_NULL is a helping macro to unify the NULL pointer over
+ * all platforms.
+ * E.g. some platforms have __builtin_null (like XC16) and some define it the
+ *      same exact way.
+ */
 #ifndef EC_NULL
 #define EC_NULL ((void *)0)
 #endif
 
+/* All CPP compilers on the other hand, use the same exact NULL pointer on all
+ * platforms. So, there is no need to change the course of standard C++ library.
+ */
 #ifdef __cplusplus
 #undef EC_NULL
 #define EC_NULL NULL
