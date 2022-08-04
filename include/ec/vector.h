@@ -184,45 +184,46 @@ typedef struct
 
 /**
  * @def ec_api_vector_iterate_next(obj)
- * @brief               changes the given iterator object to point to the next
- *                      item inside the vector. Note that the contents of the
- *                      iterator WILL change during the process.
- * @param [in/out]obj   The iterator object, pointing the the vector item that
- *                      the user wishes to get the next item after that.
+ * @brief               Gets the iterator object pointing to the next item
+ *                      after the given object inside the vector.
+ * @param [in]obj       The iterator object to be used as a reference to the
+ *                      vector.
+ * @return              The iterator pointing to the next item inside the
+ *                      vector.
  */
 #define ec_api_vector_iterate_next(obj)                                        \
     ((ec_api_vector *)(obj->_child))
 
 /**
  * @def ec_api_vector_iterate_begin(obj)
- * @brief               Sets the iterator object to point to the beginning of
- *                      the vector. Note that the contents of the iterator WILL
- *                      change during the process.
- * @param [out]obj      The iterator object to be used as the reference to the
- *                      first item of the vector.
+ * @brief               Gets the iterator object pointing to the first item of
+ *                      the vector.
+ * @param [in]obj       The iterator object to be used as a reference to the
+ *                      vector.
+ * @return              The iterator pointing to the last item of the vector.
  */
 #define ec_api_vector_iterate_begin(obj)                                       \
     (ec_api_vector_begin(obj))
 
 /**
  * @def ec_api_vector_iterate_last(obj)
- * @brief               Sets the iterator object to point to the last item of
- *                      the vector. Note that the contents of the iterator WILL
- *                      change during the process. Also please note that the
- *                      resulting iterator will point to an EXISTING value.
- * @param [out]obj      The iterator object to be used as the reference to the
- *                      last item of the vector.
+ * @brief               Gets the iterator object pointing to the last item of
+ *                      the vector.
+ * @param [in]obj       The iterator object to be used as a reference to the
+ *                      vector.
+ * @return              The iterator pointing to the last item of the vector.
  */
 #define ec_api_vector_iterate_last(obj)                                        \
     (ec_api_vector_last(obj))
 
 /**
  * @def ec_api_vector_iterate_previous(obj)
- * @brief               changes the given iterator object to point to the
- *                      previous item inside the vector. Note that the contents
- *                      of the iterator WILL change during the process.
- * @param [in/out]obj   The iterator object, pointing the the vector item that
- *                      the user wishes to get the next item after that.
+ * @brief               Gets the iterator object pointing to the previous item
+ *                      before the given object inside the vector.
+ * @param [in]obj       The iterator object to be used as a reference to the
+ *                      vector.
+ * @return              The iterator pointing to the previous item inside the
+ *                      vector.
  */
 #define ec_api_vector_iterate_previous(obj)                                    \
     ((ec_api_vector *)(obj->_parent))
@@ -255,7 +256,7 @@ typedef struct
  *      ec_api_vector_iterator_value(int, itr1) = 1;
  *
  *      // move the itr2 to the 2nd item inside the vector
- *      ec_api_vector_iterate_next(itr2);
+ *      itr2 = ec_api_vector_iterate_next(itr2);
  *
  *      // set the value of the 2nd item to be equal to the 1st item plus one.
  *      // note that itr2 is now pointing to the 2nd item while itr1 is pointing
@@ -264,7 +265,7 @@ typedef struct
  *                                  ec_api_vector_iterator_value(int, itr1) + 1;
  *
  *      // move the itr3 to the 3rd item inside the vector
- *      ec_api_vector_iterate_next(itr2);
+ *      itr2 = ec_api_vector_iterate_next(itr2);
  *
  *      // set the third item of the vector to Integer:3
  *      ec_api_vector_iterator_value(int, itr2) = 3;

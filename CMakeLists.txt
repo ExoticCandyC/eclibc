@@ -18,17 +18,26 @@ set (EC_API_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
 set (EC_API_SOURCE_FILES
                 ${PROJECT_SOURCE_DIR}/ec/map.c
-                ${PROJECT_SOURCE_DIR}/ec/vector.c)
+                ${PROJECT_SOURCE_DIR}/ec/vector.c
+                #${PROJECT_SOURCE_DIR}/ec/mutex.c
+    )
+
+
 
 set  (EC_API_HEADER_FILES
                 ${EC_API_INCLUDE_DIR}/ec/map.h
-                ${EC_API_INCLUDE_DIR}/ec/vector.h)
+                ${EC_API_INCLUDE_DIR}/ec/vector.h
+                ${EC_API_INCLUDE_DIR}/ec/mutex.h
+     )
+
+
 
 add_library(eclibc SHARED
     ${EC_API_SOURCE_FILES}
 )
 
-add_compile_options(-I"${EC_API_INCLUDE_DIR}")
+add_compile_options(-I"${EC_API_INCLUDE_DIR}" -O3 -flto -fPIC -ansi -pedantic -ftree-loop-vectorize -fstack-protector -Waggressive-loop-optimizations -Werror -Wpedantic -Wall -Wextra -Wfloat-equal -Wshadow -Wswitch-enum -Wcast-qual -Wconversion -Wundef -Wunused-macros -Wduplicated-cond -Wduplicated-branches)
+add_link_options(-O3 -flto -fPIC -ansi -pedantic -ftree-loop-vectorize -fstack-protector -Waggressive-loop-optimizations -Werror -Wpedantic -Wall -Wextra -Wfloat-equal -Wshadow -Wswitch-enum -Wcast-qual -Wconversion -Wundef -Wunused-macros -Wduplicated-cond -Wduplicated-branches)
 
 set_target_properties(eclibc PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(eclibc PROPERTIES SOVERSION 1)
@@ -45,6 +54,8 @@ install(TARGETS eclibc
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ec/eclibc.pc.in ${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/eclibc.pc @ONLY)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/eclibc.pc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/eclibc.pc DESTINATION "/lib/pkgconfig")
 
 install (CODE "execute_process(COMMAND ldconfig)")
+install (CODE "execute_process(COMMAND pkg-config eclibc)")
+
