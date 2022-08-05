@@ -21,7 +21,16 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#ifdef __cplusplus
+#include <cstdint>
+#include <cstddef>
+#else
 #include <stdint.h>
+#include <stddef.h>
+#endif
+
+#include <stdint.h>
+
 #include <ec/arch.h>
 
 #ifndef ECLIBC_PRINTF_H
@@ -343,7 +352,32 @@
  */
 #define expand_IP(value)    expand_hex32(VarName)
 
-
+/**
+ * @brief ec_generate_progress_bar      Generate a progress bar with the given
+ *                                      width, on the given progress count.
+ *                                      Since some progress bars are generated
+ *                                      using UTF characters, the characters
+ *                                      of choice must be given in string
+ *                                      format and NOT character format.
+ *                                      If you are going for UTF characters,
+ *                                      make sure you have enough space in the
+ *                                      given pointer.
+ * @param [out]ptr                      The pointer to hold the progress bar.
+ * @param [in]progress                  Current progress, in percent. (0-100)
+ * @param [in]width                     Width of the progress bar itself.
+ * @param [in]character_empty           The character to be used for the empty
+ *                                      space of the bar.
+ * @param [in]character_filled          The character to be used for the filled
+ *                                      space of the bar.
+ * @example
+ *      ec_generate_progress_bar(ptr, 20, 10, "-", "#")   =
+ *              "##--------"
+ *      ec_generate_progress_bar(ptr, 60, 15, "▱", "▰") =
+ *              "▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱"
+ */
+void ec_generate_progress_bar(char *ptr, double progress, int width,
+                                 const char *character_empty,
+                                 const char *character_filled);
 
 
 

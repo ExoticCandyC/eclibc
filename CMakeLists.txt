@@ -46,6 +46,9 @@ endmacro()
 EC_API_ADD_SOURCE_FILE(map.c)
 EC_API_ADD_SOURCE_FILE(vector.c)
 EC_API_ADD_SOURCE_FILE(io.c)
+EC_API_ADD_SOURCE_FILE(printf.c)
+EC_API_ADD_SOURCE_FILE(benchmark/performance.c)
+EC_API_ADD_SOURCE_FILE(benchmark/compare.c)
 
 EC_API_ADD_HEADER_FILE(map.h)
 EC_API_ADD_HEADER_FILE(vector.h)
@@ -54,6 +57,8 @@ EC_API_ADD_HEADER_FILE(io.h)
 EC_API_ADD_HEADER_FILE(types.h)
 EC_API_ADD_HEADER_FILE(printf.h)
 EC_API_ADD_HEADER_FILE(arch.h)
+EC_API_ADD_HEADER_FILE(benchmark/performance.h)
+EC_API_ADD_HEADER_FILE(benchmark/compare.h)
 
 ################################################################################
 # Defining targets.
@@ -85,14 +90,17 @@ add_library(eclibc SHARED
 
 add_library(eclibc32 SHARED
     ${EC_API_SOURCE_FILES}
+    ${EC_API_HEADER_FILES}
 )
 
 add_library(eclibcStatic STATIC
     ${EC_API_SOURCE_FILES}
+    ${EC_API_HEADER_FILES}
 )
 
 add_library(eclibcStatic32 STATIC
     ${EC_API_SOURCE_FILES}
+    ${EC_API_HEADER_FILES}
 )
 
 ################################################################################
@@ -166,71 +174,6 @@ set_target_properties(eclibc32       PROPERTIES OUTPUT_NAME eclibc32)
 set_target_properties(eclibcStatic32 PROPERTIES OUTPUT_NAME eclibc32)
 
 ################################################################################
-# Defining install behaviour for target: eclibc
-################################################################################
-set_target_properties(eclibc PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(eclibc PROPERTIES SOVERSION 1)
-target_include_directories(eclibc PUBLIC ${EC_API_INCLUDE_DIR} )
-set_target_properties(eclibc
-                         PROPERTIES PUBLIC_HEADER
-                         "${EC_API_HEADER_FILES}"
-                     )
-install(TARGETS eclibc
-    LIBRARY       DESTINATION "/usr/lib"
-    ARCHIVE       DESTINATION "/usr/lib"
-    RUNTIME       DESTINATION "/usr/bin"
-    PUBLIC_HEADER DESTINATION "/usr/include/ec"
-       )
-
-################################################################################
-# Defining install behaviour for target: eclibcStatic
-################################################################################
-set_target_properties(eclibcStatic PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(eclibcStatic PROPERTIES SOVERSION 1)
-target_include_directories(eclibcStatic PUBLIC ${EC_API_INCLUDE_DIR} )
-set_target_properties(eclibcStatic
-                         PROPERTIES PUBLIC_HEADER
-                         "${EC_API_HEADER_FILES}"
-                     )
-install(TARGETS eclibcStatic
-    LIBRARY       DESTINATION "/usr/lib"
-    ARCHIVE       DESTINATION "/usr/lib"
-    PUBLIC_HEADER DESTINATION "/usr/include/ec"
-       )
-
-################################################################################
-# Defining install behaviour for target: eclibc32
-################################################################################
-set_target_properties(eclibc32 PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(eclibc32 PROPERTIES SOVERSION 1)
-target_include_directories(eclibc32 PUBLIC ${EC_API_INCLUDE_DIR} )
-set_target_properties(eclibc32
-                         PROPERTIES PUBLIC_HEADER
-                         "${EC_API_HEADER_FILES}"
-                     )
-install(TARGETS eclibc32
-    LIBRARY       DESTINATION "/usr/lib32"
-    ARCHIVE       DESTINATION "/usr/lib32"
-    PUBLIC_HEADER DESTINATION "/usr/include/ec"
-       )
-
-################################################################################
-# Defining install behaviour for target: eclibcStatic32
-################################################################################
-set_target_properties(eclibcStatic32 PROPERTIES VERSION ${PROJECT_VERSION})
-set_target_properties(eclibcStatic32 PROPERTIES SOVERSION 1)
-target_include_directories(eclibcStatic32 PUBLIC ${EC_API_INCLUDE_DIR} )
-set_target_properties(eclibcStatic32
-                         PROPERTIES PUBLIC_HEADER
-                         "${EC_API_HEADER_FILES}"
-                     )
-install(TARGETS eclibcStatic32
-    LIBRARY       DESTINATION "/usr/lib32"
-    ARCHIVE       DESTINATION "/usr/lib32"
-    PUBLIC_HEADER DESTINATION "/usr/include/ec"
-       )
-
-################################################################################
 # Building the package config file
 ################################################################################
 configure_file(
@@ -240,22 +183,160 @@ configure_file(
               )
 
 ################################################################################
-# installing the package config file
+# Defining install behaviour for target: eclibc
 ################################################################################
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/.pkgconfig/eclibc.pc
-        DESTINATION "/lib/pkgconfig")
+set_target_properties(eclibc PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(eclibc PROPERTIES SOVERSION 1)
+target_include_directories(eclibc PUBLIC ${EC_API_INCLUDE_DIR} )
+
+install(
+            CODE "execute_process(COMMAND echo -e \"\r\nStarting to install target: \\\"eclibc\\\"\")"
+            TARGETS eclibc
+       )
+install(
+            DIRECTORY ${EC_API_INCLUDE_DIR}/ec/
+            TARGETS eclibc
+            DESTINATION "/usr/include/ec"
+            FILES_MATCHING PATTERN "*.h"
+       )
+install(
+            TARGETS eclibc
+            LIBRARY       DESTINATION "/usr/lib"
+            ARCHIVE       DESTINATION "/usr/lib"
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"cp ${CMAKE_CURRENT_SOURCE_DIR}/.pkgconfig/eclibc.pc /lib/pkgconfig && echo '-- Installing: /lib/pkgconfig/eclibc.pc'\")"
+            TARGETS eclibc
+       )
+install(
+            CODE "execute_process(COMMAND echo -e \"Target \\\"eclibc\\\" finished installing\r\n\")"
+            TARGETS eclibc
+       )
 
 ################################################################################
-# making symbolic links from eclibc32 to eclibc
+# Defining install behaviour for target: eclibcStatic
 ################################################################################
-install (CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.so.${PROJECT_VERSION} /usr/lib32/libeclibc.so.${PROJECT_VERSION} 2> /dev/null\")")
-install (CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.so.${PROJECT_VERSION}\")")
-install (CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.so.${PROJECT_VERSION_MAJOR} /usr/lib32/libeclibc.so.${PROJECT_VERSION_MAJOR} 2> /dev/null\")")
-install (CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.so.${PROJECT_VERSION_MAJOR}\")")
-install (CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.so /usr/lib32/libeclibc.so 2> /dev/null\")")
-install (CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.so\")")
-install (CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.a /usr/lib32/libeclibc.a 2> /dev/null\")")
-install (CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.a\")")
+set_target_properties(eclibcStatic PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(eclibcStatic PROPERTIES SOVERSION 1)
+target_include_directories(eclibcStatic PUBLIC ${EC_API_INCLUDE_DIR} )
+
+install(
+            CODE "execute_process(COMMAND echo -e \"\r\nStarting to install target: \\\"eclibcStatic\\\"\")"
+            TARGETS eclibcStatic
+       )
+install(
+            DIRECTORY ${EC_API_INCLUDE_DIR}/ec/
+            TARGETS eclibcStatic
+            DESTINATION "/usr/include/ec"
+            FILES_MATCHING PATTERN "*.h"
+       )
+install(
+            TARGETS eclibcStatic
+            LIBRARY       DESTINATION "/usr/lib"
+            ARCHIVE       DESTINATION "/usr/lib"
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"cp ${CMAKE_CURRENT_SOURCE_DIR}/.pkgconfig/eclibc.pc /lib/pkgconfig && echo '-- Installing: /lib/pkgconfig/eclibc.pc'\")"
+            TARGETS eclibcStatic
+       )
+install(
+            CODE "execute_process(COMMAND echo -e \"Target \\\"eclibcStatic\\\" finished installing\r\n\")"
+            TARGETS eclibcStatic
+       )
+
+################################################################################
+# Defining install behaviour for target: eclibc32
+################################################################################
+set_target_properties(eclibc32 PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(eclibc32 PROPERTIES SOVERSION 1)
+target_include_directories(eclibc32 PUBLIC ${EC_API_INCLUDE_DIR} )
+
+install(
+            CODE "execute_process(COMMAND echo -e \"\r\nStarting to install target: \\\"eclibc32\\\"\")"
+            TARGETS eclibc32
+       )
+install(
+            DIRECTORY ${EC_API_INCLUDE_DIR}/ec/
+            TARGETS eclibc32
+            DESTINATION "/usr/include/ec"
+            FILES_MATCHING PATTERN "*.h"
+       )
+install(
+            TARGETS eclibc32
+            LIBRARY       DESTINATION "/usr/lib32"
+            ARCHIVE       DESTINATION "/usr/lib32"
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.so.${PROJECT_VERSION} /usr/lib32/libeclibc.so.${PROJECT_VERSION} 2> /dev/null\")"
+            TARGETS eclibc32
+       )
+install(
+            CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.so.${PROJECT_VERSION}\")"
+            TARGETS eclibc32
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.so.${PROJECT_VERSION_MAJOR} /usr/lib32/libeclibc.so.${PROJECT_VERSION_MAJOR} 2> /dev/null\")"
+            TARGETS eclibc32
+       )
+install(
+            CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.so.${PROJECT_VERSION_MAJOR}\")"
+            TARGETS eclibc32
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.so /usr/lib32/libeclibc.so 2> /dev/null\")"
+            TARGETS eclibc32
+       )
+install(
+            CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.so\")"
+            TARGETS eclibc32
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"cp ${CMAKE_CURRENT_SOURCE_DIR}/.pkgconfig/eclibc.pc /lib/pkgconfig && echo '-- Installing: /lib/pkgconfig/eclibc.pc'\")"
+            TARGETS eclibc32
+       )
+install(
+            CODE "execute_process(COMMAND echo -e \"Target \\\"eclibc32\\\" finished installing\r\n\")"
+            TARGETS eclibc32
+       )
+
+################################################################################
+# Defining install behaviour for target: eclibcStatic32
+################################################################################
+set_target_properties(eclibcStatic32 PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(eclibcStatic32 PROPERTIES SOVERSION 1)
+target_include_directories(eclibcStatic32 PUBLIC ${EC_API_INCLUDE_DIR} )
+
+install(
+            CODE "execute_process(COMMAND echo -e \"\r\nStarting to install target: \\\"eclibcStatic32\\\"\")"
+            TARGETS eclibcStatic32
+       )
+install(
+            DIRECTORY ${EC_API_INCLUDE_DIR}/ec/
+            TARGETS eclibcStatic32
+            DESTINATION "/usr/include/ec"
+            FILES_MATCHING PATTERN "*.h"
+       )
+install(
+            TARGETS eclibcStatic32
+            LIBRARY       DESTINATION "/usr/lib32"
+            ARCHIVE       DESTINATION "/usr/lib32"
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"ln -s /usr/lib32/libeclibc32.a /usr/lib32/libeclibc.a 2> /dev/null\")"
+            TARGETS eclibcStatic32
+       )
+install(
+            CODE "execute_process(COMMAND echo \"-- Up-to-date: /usr/lib32/libeclibc.a\")"
+            TARGETS eclibcStatic32
+       )
+install(
+            CODE "execute_process(COMMAND bash -c \"cp ${CMAKE_CURRENT_SOURCE_DIR}/.pkgconfig/eclibc.pc /lib/pkgconfig && echo '-- Installing: /lib/pkgconfig/eclibc.pc'\")"
+            TARGETS eclibcStatic32
+       )
+install(
+            CODE "execute_process(COMMAND echo -e \"Target \\\"eclibcStatic32\\\" finished installing\r\n\")"
+            TARGETS eclibcStatic32
+       )
 
 ################################################################################
 # updating operating system library files

@@ -25,7 +25,11 @@
 #define ECLIBC_IO_H 1
 
 #include <ec/vector.h>
+#ifdef __cplusplus
+#include <cstdarg>
+#else
 #include <stdarg.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"

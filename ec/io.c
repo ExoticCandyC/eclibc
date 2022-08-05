@@ -21,8 +21,13 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#ifdef __cplusplus
+#include <cstdio>
+#include <cstring>
+#else
 #include <stdio.h>
 #include <string.h>
+#endif
 
 #include <ec/io.h>
 #include <ec/printf.h>

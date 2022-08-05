@@ -25,7 +25,12 @@
 #define ECLIBC_MUTEX_H 1
 
 #include <pthread.h>
+
+#ifdef __cplusplus
+#include <cstddef>
+#else
 #include <stddef.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
