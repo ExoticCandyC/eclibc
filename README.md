@@ -26,7 +26,8 @@
 🔸 [Brief description](#brief-description) \
 🔸 [Dependencies](#dependencies) \
 🔸 [Installation](#installation) \
-🔸 [Documentation](#documentation)
+🔸 [Documentation](#documentation) \
+🔸 [Benchmark tools](#benchmark) \
 
 
 
@@ -91,4 +92,114 @@ As of August 2022, there are no plans to enable official support for Microsoft W
 
 Wiki pages are planned to be added to the git repository, and an official website is planned to be generated that will host a begginer friendly C tutorial, beginner friendly C++ tutorial and a comprehensive guide on how to use eclibc in both C and C++<br />
 Considering my tight schedule and the fact that this project is a solo project, there is no expected date for the aforementioned documentations.
+
+
+## Benchmark tools
+
+This library is packed with benchmarking tools.
+
+<h4 align="center">Compare module</h4>
+
+You can compare the execution time of two functions using the built-in "ec_performance_compare" function.
+
+Following is an example of how to use the compare function, showing real comparison of C standard functions "strcpy" and "memcpy".
+
+```c
+/* Compare function from the benchmark module */
+#include <ec/benchmark/compare.h>
+#include <string.h>
+
+/* Leaving the static parts out to make sure they dont affect the benchmark */
+const char source[] = "source string";
+const size_t len = sizeof(source);
+char destination[sizeof(source)];
+int index;
+
+void function_1()
+{
+    /* copying a string using memcpy */
+    for(index = 0; index < 3000; index++)
+        memcpy(destination, source, len);
+}
+
+void function_2()
+{
+    /* copying a string using strcpy */
+    for(index = 0; index < 3000; index++)
+        strcpy(destination, source);
+}
+
+int main()
+{
+    /* Comparing memcpy vs strcpy*/
+    ec_performance_compare(function_1, function_2, 1000000, 3000);
+    return 0;
+}
+```
+
+This is the output of the program:
+
+```
+eclibc: ec/benchmark/compare.h:
+    Starting the function comparison algorithm:
+
+Function 1 iteration progress: [##################] 100.0%
+Function 1 finished iterating.
+
+Function 2 iteration progress: [##################] 100.0%
+Function 2 finished iterating.
+
+eclibc: ec/benchmark/compare.h:
+
+Comparison test results:
+    Iterations: 3000000000
+
+    Function 1:
+        Start:	Fri Aug  5 20:33:20 2022
+        Finish:	Fri Aug  5 20:33:28 2022
+        Elapsed time: 8222487[us]
+
+    Function 2:
+        Start:	Fri Aug  5 20:33:28 2022
+        Finish:	Fri Aug  5 20:33:34 2022
+        Elapsed time: 6150673[us]
+
+    Function 2 is 133.6843464122% faster than Function 1.
+
+
+Press any key to continue.
+```
+
+As you can see, strcpy is 133.68% faster than memcpy.
+
+<h4 align="center">Performance module</h4>
+
+Inorder to see how long your program takes to run, all you have to do is including the "performance.h" file.
+
+```c
+#include <ec/benchmark/performance.h>
+```
+
+When the program finishes running, statistics will be printed. Following is an example output:
+
+```
+eclibc: ec/benchmark/performance.h:
+
+          Program finished running.     
+    Press any key to see the statistics.
+
+Accuracy of the calculated time difference: 97.96%
+
+Execution started at:
+        Fri Aug  5 19:53:11 2022
+
+Execution finished at:
+        Fri Aug  5 19:53:19 2022
+
+Execution of the program took:
+        7455612[us]
+
+Press any key to exit.
+```
+
 
