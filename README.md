@@ -37,7 +37,7 @@
 **eclibc** is a C library, containing everyday use functions implemented in ANSI C language. This library can be compiled by most 16bit, 32bit and 64bit compilers, including:
 
 **Computer targets:**<br />
-<a href="https://gcc.gnu.org" style="text-decoration:none;">🔹 GCC</a><br />
+<a href="https://gcc.gnu.org" style="text-decoration:none; color: white;">🔹 GCC</a><br />
 🔹 Clang<br />
 🔹 TCC<br />
 🔹 ICC<br />
