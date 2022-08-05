@@ -37,20 +37,20 @@
 **eclibc** is a C library, containing everyday use functions implemented in ANSI C language. This library can be compiled by most 16bit, 32bit and 64bit compilers, including:
 
 **Computer targets:**<br />
-<a href="https://gcc.gnu.org" style="text-decoration:none; color: white;">🔹 GCC</a><br />
-🔹 Clang<br />
-🔹 TCC<br />
-🔹 ICC<br />
-🔹 MinGW32-GCC<br />
+<a href="https://gcc.gnu.org" style="text-decoration:none;">🔹 GCC</a><br />
+<a href="https://clang.llvm.org/" style="text-decoration:none;">🔹 Clang</a><br />
+<a href="https://bellard.org/tcc/" style="text-decoration:none;">🔹 TCC</a><br />
+<a href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/dpc-compiler.html" style="text-decoration:none;">🔹 ICC</a><br />
+<a href="https://www.mingw-w64.org/" style="text-decoration:none;">🔹 MinGW32-GCC</a><br />
 
 **Espressif targets:**<br />
-🔸 xtensa-esp32-elf-gcc<br />
-🔸 xtensa-esp32s2-elf-gcc<br />
-🔸 xtensa-esp32s2-elf-gcc<br />
+<a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-tools.html" style="text-decoration:none;">🔸 xtensa-esp32-elf-gcc</a><br />
+<a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-tools.html" style="text-decoration:none;">🔸 xtensa-esp32s2-elf-gcc</a><br />
+<a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-tools.html" style="text-decoration:none;">🔸 xtensa-esp32s2-elf-gcc</a><br />
 
 **Micochip© micro-processor units:**<br />
-🔸 xc16-gcc<br />
-🔸 xc32-gcc<br />
+<a href="https://www.microchip.com/en-us/education/developer-help/learn-tools-software/mcu-mpu/compilers/xc16" style="text-decoration:none;">🔸 xc16-gcc</a><br />
+<a href="https://www.microchip.com/en-us/education/developer-help/learn-tools-software/mcu-mpu/compilers/xc32" style="text-decoration:none;">🔸 xc32-gcc</a><br />
 
 
 ## Dependencies
