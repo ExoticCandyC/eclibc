@@ -80,6 +80,9 @@
  **             the same as "ec_api_vector_for_each" but starts from the    **
  **             last element and ends after the first element.              **
  **                                                                         **
+ ** To add a variable at the end of the vector, you can use the following:  **
+ **     ec_api_vector_push_back($VECTOR_NAME$, $VARIABLE_TYPE$, $DATA$)     **
+ **                                                                         **
  ** To get the size of a given vector, use the following function:          **
  **      ec_api_vector_size(VECTOR_NAME$)                                   **
  **                                                                         **
@@ -118,9 +121,11 @@
 #ifdef __cplusplus
 #include <cstddef>
 #include <cstdlib>
+#include <cstring>
 #else
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #endif
 
 #ifdef __cplusplus
@@ -290,6 +295,17 @@ typedef struct
     (*(((type *)((ec_api_vector *)itr)->_this)))
 
 /**
+ * @def ec_api_vector_iterator_pointer(type, itr)
+ * @brief               This simply acts as an alias for the pointer to the
+ *                      contents of the given iterator, having the given type.
+ * @param [in]type      The type of the value stored in the chosen item.
+ *                      E.g. int, float, double, etc.
+ * @param [in]itr       The iterator you wish to work with its value.
+ */
+#define ec_api_vector_iterator_pointer(type, itr)                              \
+     (((type *)((ec_api_vector *)itr)->_this))
+
+/**
  * @def ec_api_vector_for_each(iterator, tree)
  * @brief               Just an alias for a for loop that will iterate through
  *                      all the items inside the vector.
@@ -349,6 +365,23 @@ typedef struct
             else                                                               \
                 __ec_api_vector_expand(_vector, sizeof(node_type));            \
         }
+
+/**
+ * @def ec_api_vector_push_back(__vector, __type, __data)
+ * @brief               Expands a vector and puts the given data at the end of
+ *                      the vector.
+ * @param [in]__vector  The vector to be initialized and/or expanded.
+ * @param [in]__type    The type of the item to be added to the vector.
+ * @param [in]__data    The data to be added to the new object inside the
+ *                      vector.
+ * @param [in]__size    The size of the data given to be added.
+ */
+#define ec_api_vector_push_back(__vector, __type, __data, __size)              \
+    {                                                                          \
+        ec_api_vector_expand(__vector, __type);                                \
+        memcpy((((ec_api_vector *)ec_api_vector_last(__vector))->_this),       \
+        (void *)(__data), __size);                                             \
+    }
 
 /**
  * @warning INVALID INDEX NUMBER CAN AND WILL LEAD TO SEGMENTATION FAULT OR

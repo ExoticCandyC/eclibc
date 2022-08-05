@@ -22,11 +22,6 @@
  **/
 
 #include <ec/vector.h>
-#ifdef __cplusplus
-#include <cstring>
-#else
-#include <string.h>
-#endif
 
 /*
  * destructor is defined inside my own private API. So it is just a safeguard
