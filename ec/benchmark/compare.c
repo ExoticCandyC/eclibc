@@ -22,16 +22,11 @@
  **/
 
 #if (defined(__linux__) || defined(_WIN32))
+
 #include <sys/time.h>
-#ifdef __cplusplus
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#endif
 
 #include <ec/benchmark/compare.h>
 #include <ec/io.h>

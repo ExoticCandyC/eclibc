@@ -34,15 +34,9 @@
 #undef  ________DO_NOT_ENABLE_PERFORMANCE_TEST________
 
 #include <sys/time.h>
-#ifdef __cplusplus
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#endif
 
 /* Since different compilers and different platforms implement NULL in a
  * different manner, EC_NULL is a helping macro to unify the NULL pointer over

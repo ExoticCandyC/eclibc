@@ -118,15 +118,9 @@
 #ifndef ECLIBC_VECTOR_H
 #define ECLIBC_VECTOR_H 1
 
-#ifdef __cplusplus
-#include <cstddef>
-#include <cstdlib>
-#include <cstring>
-#else
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#endif
 
 #ifdef __cplusplus
 extern "C"

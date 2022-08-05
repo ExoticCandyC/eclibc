@@ -21,13 +21,9 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifdef __cplusplus
-#include <cstdint>
-#include <cstddef>
-#else
+
 #include <stdint.h>
 #include <stddef.h>
-#endif
 
 #include <stdint.h>
 

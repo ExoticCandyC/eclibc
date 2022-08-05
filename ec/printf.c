@@ -23,11 +23,7 @@
 
 #include <ec/printf.h>
 
-#ifdef __cplusplus
-#include <cstring>
-#else
 #include <string.h>
-#endif
 
 #ifdef __cplusplus
 extern "C"
