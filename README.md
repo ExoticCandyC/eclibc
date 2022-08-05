@@ -27,7 +27,7 @@
 🔸 [Dependencies](#dependencies) \
 🔸 [Installation](#installation) \
 🔸 [Documentation](#documentation) \
-🔸 [Benchmark tools](#benchmark) \
+🔸 [Benchmark tools](#benchmark) 
 
 
 
