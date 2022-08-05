@@ -15,7 +15,7 @@
 </p>
 <p align="center">
 <a href="https://github.com/ExoticCandyC/eclibc/releases"><img src="https://img.shields.io/badge/release-1.0-2A9692?style=plastic&logo=github&logoColor=ffffff&label=Release" /></a>
-<a href="#"><img src="https://img.shields.io/github/directory-file-count/exoticcandyc/eclibc?style=plastic&logo=github&label=Files%20in%20repository&color=6B248E" /></a>
+<a href="#"><img src="https://img.shields.io/github/directory-file-count/exoticcandyc/eclibc/include/ec?style=plastic&logo=github&label=Header files%20in%20repository&color=6B248E" /></a>
 <a href="#"><img src="https://img.shields.io/github/repo-size/exoticcandyc/eclibc?style=plastic&logo=github&label=Repository%20size&color=1C26D8" /></a>
 <a href="https://github.com/ExoticCandyC/eclibc/issues?q=is%3Aopen"><img src="https://img.shields.io/github/issues-raw/exoticcandyc/eclibc?style=plastic&color=8D621C" /></a>
 <a href="https://github.com/ExoticCandyC/eclibc/issues"><img src="https://img.shields.io/github/issues-closed-raw/exoticcandyc/eclibc?style=plastic&color=1C8D24" /></a>
