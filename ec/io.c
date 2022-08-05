@@ -1,3 +1,4 @@
+/* <io.c> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
