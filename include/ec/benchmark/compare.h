@@ -22,6 +22,12 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||           \
+       defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&       \
+       (defined(_WIN32) || defined(__linux__))
+#pragma GCC diagnostic ignored "-Wlong-long"
+#endif
+
 #ifndef ECLIBC_BENCHMARK_COMPARE_H
 #define ECLIBC_BENCHMARK_COMPARE_H 1
 

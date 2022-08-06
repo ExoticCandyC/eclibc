@@ -44,4 +44,6 @@ libeclibc.s*
 Makefile
 CMakeLists.txt.user
 ec_install
+clean.sh
+path_config.sh
 

@@ -24,7 +24,19 @@
 
 #ifndef EC_ARCH
 
-#if defined(_WIN32)
+#if defined(XC8)
+#   define EC_ARCH 8
+#elif defined(XC16)
+#   define EC_ARCH 16
+#elif defined(XC32)
+#   define EC_ARCH 32
+#elif defined(__XC32)
+#   define EC_ARCH 32
+#elif defined(__MCUXPRESSO)
+#   define EC_ARCH 16
+#elif defined(IDF_VER)
+#   define EC_ARCH 32
+#elif defined(_WIN32)
 #   if defined _WIN64
 #       define EC_ARCH 64
 #   elif defined(_WIN32)
@@ -36,18 +48,6 @@
 #   else
 #       define EC_ARCH 64
 #   endif
-#elif defined(__XC32)
-#   define EC_ARCH 32
-#elif defined(__MCUXPRESSO)
-#   define EC_ARCH 16
-#elif defined(IDF_VER)
-#   define EC_ARCH 32
-#elif defined(XC8)
-#   define EC_ARCH 8
-#elif defined(XC16)
-#   define EC_ARCH 16
-#elif defined(XC32)
-#   define EC_ARCH 32
 #endif
 
 #endif

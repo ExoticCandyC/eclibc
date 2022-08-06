@@ -28,10 +28,10 @@
 
 #include <stdint.h>
 
-#include <ec/arch.h>
-
 #ifndef ECLIBC_PRINTF_H
 #define ECLIBC_PRINTF_H 1
+
+#include <ec/arch.h>
 
 /**
  * @file    printf.h
@@ -381,5 +381,3 @@ void ec_generate_progress_bar(char *ptr, double progress, int width,
 
 
 #endif
-
-

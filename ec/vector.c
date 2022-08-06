@@ -37,9 +37,10 @@
 extern "C"
 {
 #endif
- 
+
 ec_api_vector_create(__ec_api_vectors_list);
 
+#ifndef XC16
 __attribute__((destructor)) void ec_api_vector_garbage_collector(void)
 {
     ec_api_vector_iterator itr;
@@ -55,6 +56,7 @@ __attribute__((destructor)) void ec_api_vector_garbage_collector(void)
     }
     ec_api_vector_delete(__ec_api_vectors_list);
 }
+#endif
 
 void ____ec_api_register_new_vector(ec_api_vector_iterator itr)
 {

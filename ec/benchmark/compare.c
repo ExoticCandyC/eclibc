@@ -80,8 +80,8 @@ void ec_performance_compare(void (*function1)(void),
     struct timeval function2_end;
     time_t         function2_end_time;
 
-    __time_t       function1_elapsed;
-    __time_t       function2_elapsed;
+    time_t         function1_elapsed;
+    time_t         function2_elapsed;
 
     double         relative_1_2;
     double         relative_2_1;
@@ -91,13 +91,13 @@ void ec_performance_compare(void (*function1)(void),
     #else
     int            terminalColumns = 80;
     #endif
-    int            progressBarWidth = terminalColumns -
-                             sizeof("Function 1 iteration progress: [] 100.0%");
+    int            progressBarWidth = (int)(terminalColumns -
+                       (int)sizeof("Function 1 iteration progress: [] 100.0%"));
     char           *progressBar;
 
     if(progressBarWidth < 0)
         progressBarWidth = 0;
-    progressBar = malloc(progressBarWidth + 1);
+    progressBar = malloc((size_t)(progressBarWidth + 1));
 
     printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
 
@@ -168,17 +168,31 @@ void ec_performance_compare(void (*function1)(void),
 
     printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
     printf("Comparison test results:\r\n");
+
+    #if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||        \
+           defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&    \
+           (defined(_WIN32) || defined(__linux__))
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wformat"
+    #endif
     printf("\tIterations: %lld\n\r", (iteration * innerItterations));
+    #if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||        \
+           defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&    \
+           (defined(_WIN32) || defined(__linux__))
+    #pragma GCC diagnostic pop
+    #endif
 
     printf("\r\n\tFunction 1:\r\n");
     printf("\t\tStart:\t%s\r" , ctime(&function1_start_time));
     printf("\t\tFinish:\t%s\r", ctime(&function1_end_time));
-    printf("\t\tElapsed time: %lu[us]\r\n", function1_elapsed);
+    printf("\t\tElapsed time: %lu[us]\r\n",
+                                          (long unsigned int)function1_elapsed);
 
     printf("\r\n\tFunction 2:\r\n");
     printf("\t\tStart:\t%s\r" , ctime(&function2_start_time));
     printf("\t\tFinish:\t%s\r", ctime(&function2_end_time));
-    printf("\t\tElapsed time: %lu[us]\r\n", function2_elapsed);
+    printf("\t\tElapsed time: %lu[us]\r\n",
+                                          (long unsigned int)function2_elapsed);
     printf("\r\n");
 
     relative_1_2 =

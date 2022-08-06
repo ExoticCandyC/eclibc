@@ -22,6 +22,10 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#if !defined(_XOPEN_SOURCE) && !defined(XC16) && !defined(XC32)
+#define _XOPEN_SOURCE
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -143,7 +147,7 @@ void ec_popen_multi_line(char *command, ec_api_vector **respond_vector,
     fp = popen(command, "r");
     do
     {
-        ptr = fgets(respond, (sizeof(char) * max_respond_size), fp);
+        ptr = fgets(respond, (int)(sizeof(char) * max_respond_size), fp);
         if(ptr != EC_NULL)
         {
             /* remove the new line from each repond line */
@@ -337,14 +341,3 @@ void ec_io_cursor_restore()
 #ifdef __cplusplus
 }
 #endif
-
-
-
-
-
-
-
-
-
-
-

@@ -116,6 +116,12 @@
  *****************************************************************************
  **/
 
+#if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||           \
+      defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&        \
+      (defined(_WIN32) || defined(__linux__))
+#pragma GCC diagnostic ignored "-Wvla"
+#endif
+
 #ifndef ECLIBC_VECTOR_H
 #define ECLIBC_VECTOR_H 1
 

@@ -74,7 +74,7 @@ void ____ec_api_performance_constructor()
 void ____ec_api_performance_destructor()
 {
     int index;
-    __time_t duration;
+    time_t duration;
     double accuracy;
     double fracture;
     struct timeval __ec_api_performance_test_end;
@@ -118,7 +118,8 @@ void ____ec_api_performance_destructor()
                                 ctime(&__ec_api_performance_test_start_time));
     printf("Execution finished at:\r\n\t\t%s\r\n",
                                 ctime(&now));
-    printf("Execution of the program took:\r\n\t\t%lu[us]\r\n\n\n", duration);
+    printf("Execution of the program took:\r\n\t\t%lu[us]\r\n\n\n",
+                                                   (long unsigned int)duration);
     #ifdef __linux__
     printf("Press any key to exit.\r\n");
     system("read -r -n 1 -s");
