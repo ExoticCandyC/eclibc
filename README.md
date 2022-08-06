@@ -113,8 +113,9 @@ Since the standard C protocols are being followed, and CMake is available on mos
 As of August 2022, there are no plans to enable official support for Microsoft Windows®. But generally speaking, making the library compatible with MinGW32-GCC is a future goal and that would enable the unofficial support for Microsoft Windows® targets.
 
 The compilers used to develop and test this library:<br />
-🔹gcc: version 12.1.1 20220730<br />
+🔹gcc version 12.1.1 20220730<br />
 🔹clang version 14.0.6<br />
+🔹x86_64-w64-mingw32-gcc version 12.1.0<br />
 🔹xtensa-esp32-elf-gcc (esp-2022r1-RC1) version 11.2.0<br />
 🔹xtensa-esp32s2-elf-gcc (esp-2022r1-RC1) version 11.2.0<br />
 🔹xtensa-esp32s3-elf-gcc (esp-2022r1-RC1) version 11.2.0<br />
