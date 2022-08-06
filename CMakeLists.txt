@@ -1,11 +1,12 @@
 
 ################################################################################
-# CMake pre requirements
+# CMake pre requirements - It cant be higher than the minimum required by ESP
+# IDF, because then it would cause erros during cmake process in some cases.
 ################################################################################
 cmake_minimum_required(VERSION 3.16)
 
 ################################################################################
-# Setting up the versioning system
+# Setting up the versioning system and internal variables
 ################################################################################
 set(Developement 0)
 set(Nightly      1)
@@ -13,13 +14,21 @@ set(Alpha        2)
 set(Beta         3)
 set(Release      4)
 
-################################################################################
-# Defining the project description
-################################################################################
-set(EC_API_SOVERSION 1)
-project(eclibc VERSION ${EC_API_SOVERSION}.0.0.${Developement} DESCRIPTION 
- "FOSS C library used in software developed by https://github.com/ExoticCandyC")
+set(EC_PROJECT_NAME         eclibc)
+set(EC_PROJECT_VERSION      1.0.0.${Developement})
+set(EC_PROJECT_HOMEPAGE_URL "https://github.com/ExoticCandyC/eclibc")
+set(EC_PROJECT_DESCRIPTION  "FOSS C library used in software developed by " /
+                                              "https://github.com/ExoticCandyC")
 
+################################################################################
+# Creating the CMake Project
+################################################################################
+project(                  ${EC_PROJECT_NAME}
+            VERSION       ${EC_PROJECT_VERSION}
+            HOMEPAGE_URL "${EC_PROJECT_HOMEPAGE_URL}"
+            DESCRIPTION  "${EC_PROJECT_DESCRIPTION}"
+            LANGUAGES C
+       )
 
 ################################################################################
 # Asking CMake to export all symbols
@@ -30,6 +39,11 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols")
 # Setting up the include directory path
 ################################################################################
 set (EC_API_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+
+################################################################################
+# Setting up a navigator variable
+################################################################################
+set(ENV{ECLIBC_INSTALLER_MAIN_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 ################################################################################
 # Defining the modules used to add files
@@ -176,11 +190,16 @@ macro(EC_API_SEARCH_FOR_COMPILER)
     unset(EC_COMPILER_PATH_${ARGV0}_${ARGV1})
     find_program(EC_THE_COMPILER_${ARGV0}_${ARGV1} ${ARGV0})
     if(EC_THE_COMPILER_${ARGV0}_${ARGV1})
-    	get_filename_component(EC_COMPILER_PATH_${ARGV0}_${ARGV1} ${EC_THE_COMPILER_${ARGV0}_${ARGV1}} DIRECTORY)
-    	get_filename_component(EC_COMPILER_PATH_${ARGV0}_${ARGV1} ${EC_COMPILER_PATH_${ARGV0}_${ARGV1}} DIRECTORY)
-    	set(EC_TARGET_LIBRARY_PATH "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV7}")
-    	set(EC_TARGET_ARCHIVE_PATH "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV8}")
-    	set(EC_TARGET_HEADER_PATH  "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV9}")
+        get_filename_component(EC_COMPILER_PATH_${ARGV0}_${ARGV1}
+                                 ${EC_THE_COMPILER_${ARGV0}_${ARGV1}} DIRECTORY)
+        get_filename_component(EC_COMPILER_PATH_${ARGV0}_${ARGV1}
+                                ${EC_COMPILER_PATH_${ARGV0}_${ARGV1}} DIRECTORY)
+        set(EC_TARGET_LIBRARY_PATH
+                               "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV7}")
+        set(EC_TARGET_ARCHIVE_PATH
+                               "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV8}")
+        set(EC_TARGET_HEADER_PATH
+                               "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV9}")
 	print(BOLD COLOR GREEN "-- Found ${ARGV0} for target: ${ARGV4}")
 	
 	#add the target
@@ -250,7 +269,8 @@ macro(EC_API_SEARCH_FOR_COMPILER)
             target_compile_options(${ARGV4} PRIVATE -Wpedantic)
             target_compile_options(${ARGV4} PRIVATE -ftree-loop-vectorize)
             target_compile_options(${ARGV4} PRIVATE -fstack-protector)
-            target_compile_options(${ARGV4} PRIVATE -Waggressive-loop-optimizations)
+            target_compile_options(${ARGV4} PRIVATE
+                                                -Waggressive-loop-optimizations)
             target_compile_options(${ARGV4} PRIVATE -flto)
 
             target_link_options(${ARGV4} PRIVATE -O3)
@@ -258,7 +278,8 @@ macro(EC_API_SEARCH_FOR_COMPILER)
             target_link_options(${ARGV4} PRIVATE -Wduplicated-branches)
             target_link_options(${ARGV4} PRIVATE -pedantic)
             target_link_options(${ARGV4} PRIVATE -ftree-loop-vectorize)
-            target_link_options(${ARGV4} PRIVATE -Waggressive-loop-optimizations)
+            target_link_options(${ARGV4} PRIVATE
+                                                -Waggressive-loop-optimizations)
             target_link_options(${ARGV4} PRIVATE -fstack-protector)
             target_link_options(${ARGV4} PRIVATE -flto)
         endif()
@@ -275,16 +296,16 @@ macro(EC_API_SEARCH_FOR_COMPILER)
         set(EC_COMPILER_SCRIPT_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/.compiler_scripts")
         set(EC_COMPILER_SCRIPT_FILE "${EC_COMPILER_SCRIPT_DIR}/${ARGV4}")
         set(EC_COMPILER_SCRIPT_GIT  "${EC_COMPILER_SCRIPT_DIR}/.gitignore")
-	execute_process(COMMAND bash -c "mkdir ${EC_COMPILER_SCRIPT_DIR}/ 2> /dev/null")
-	execute_process(COMMAND bash -c "echo \"*\" > ${EC_COMPILER_SCRIPT_GIT}")
-	execute_process(COMMAND bash -c "echo \"\#\!/bin/bash\" > ${EC_COMPILER_SCRIPT_FILE}")
-	execute_process(COMMAND bash -c "echo \"set -- \\\"${EC_THE_COMPILER_${ARGV0}_${ARGV1}}\\\" \\\"\\\${@:2}\\\"\" >> ${EC_COMPILER_SCRIPT_FILE}")
-	execute_process(COMMAND bash -c "echo \"\\\$@\" >> ${EC_COMPILER_SCRIPT_FILE}")
-	execute_process(COMMAND bash -c "chmod +x ${EC_COMPILER_SCRIPT_FILE}")
+        execute_process(COMMAND bash -c "mkdir ${EC_COMPILER_SCRIPT_DIR}/ 2> /dev/null")
+        execute_process(COMMAND bash -c "echo \"*\" > ${EC_COMPILER_SCRIPT_GIT}")
+        execute_process(COMMAND bash -c "echo \"\#\!/bin/bash\" > ${EC_COMPILER_SCRIPT_FILE}")
+        execute_process(COMMAND bash -c "echo \"set -- \\\"${EC_THE_COMPILER_${ARGV0}_${ARGV1}}\\\" \\\"\\\${@:2}\\\"\" >> ${EC_COMPILER_SCRIPT_FILE}")
+        execute_process(COMMAND bash -c "echo \"\\\$@\" >> ${EC_COMPILER_SCRIPT_FILE}")
+        execute_process(COMMAND bash -c "chmod +x ${EC_COMPILER_SCRIPT_FILE}")
 	
         # setup the target's configurations
         set_target_properties(${ARGV4} PROPERTIES VERSION ${PROJECT_VERSION})
-        set_target_properties(${ARGV4} PROPERTIES SOVERSION ${EC_API_SOVERSION})
+        set_target_properties(${ARGV4} PROPERTIES SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR})
         set_target_properties(${ARGV4} PROPERTIES C_COMPILER_LAUNCHER "${EC_COMPILER_SCRIPT_FILE}")
         set_target_properties(${ARGV4} PROPERTIES C_LINKER_LAUNCHER "${EC_COMPILER_SCRIPT_FILE}")
         target_include_directories(${ARGV4} PUBLIC ${EC_API_INCLUDE_DIR} )

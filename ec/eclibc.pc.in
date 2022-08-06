@@ -4,6 +4,7 @@ libdir=/usr/lib
 includedir=/usr/include
 
 Name: @PROJECT_NAME@
+Homepage: @PROJECT_HOMEPAGE_URL@
 Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
 
