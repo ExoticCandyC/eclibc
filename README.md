@@ -84,7 +84,7 @@ sudo make install
 
 The script above will install the ECLIBC library for the native compiler, "MinGW" if present, "xtensa-esp32-elf-gcc" and XC16 version 1.70. Note that each compiler and each architecture has to compile the library separately and generate the appropriate library files for the target. So, bigger number of compilers will naturally lead to longer compile and installation times. 
 
-Please note that the libray is installed into the compile specific library folders if "sudo make install" is invoked, so, you dont need to tell the compiler where to look for the library files and just adding "-leclbc" at the end of the compile command is enough to link this library with you program.
+Please note that the libray is installed into the compile specific library folders if "sudo make install" is invoked, so, you dont need to tell the compiler where to look for the library files and just adding "-leclibc" at the end of the compile command is enough to link this library with you program.
 
 You can virtuallty add the ECLIBC library to your compiler by default. To do so, you can add the following bash commands to your ~/.bashrc
 
@@ -111,6 +111,14 @@ The testings and developements are done on:<br />
 Since the standard C protocols are being followed, and CMake is available on most platforms, one should easily be able to compile this library on any other target including FreeBSD, OpenBSD, OSX. 
 
 As of August 2022, there are no plans to enable official support for Microsoft Windows®. But generally speaking, making the library compatible with MinGW32-GCC is a future goal and that would enable the unofficial support for Microsoft Windows® targets.
+
+The compilers used to develop and test this library:<br />
+🔹gcc: version 12.1.1 20220730<br />
+🔹clang version 14.0.6<br />
+🔹xtensa-esp32-elf-gcc (esp-2022r1-RC1) version 11.2.0<br />
+🔹xtensa-esp32s2-elf-gcc (esp-2022r1-RC1) version 11.2.0<br />
+🔹xtensa-esp32s3-elf-gcc (esp-2022r1-RC1) version 11.2.0<br />
+🔹xc16-gcc v1.70 elf version 4.5.1 Build date: March 2nd 2021
 
 ## Documentation
 
