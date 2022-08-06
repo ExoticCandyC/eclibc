@@ -43,39 +43,51 @@ set (EC_API_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 ################################################################################
 # Setting up a navigator variable
 ################################################################################
-set(ENV{ECLIBC_INSTALLER_MAIN_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+set(ENV{ECLIBC_MAIN_CMAKE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 ################################################################################
 # Defining the modules used to add files
 ################################################################################
 macro(EC_API_ADD_SOURCE_FILE)
-    list(APPEND EC_API_SOURCE_FILES ${PROJECT_SOURCE_DIR}/ec/${ARGV0})
+    file(
+            RELATIVE_PATH
+            _relPath
+            $ENV{ECLIBC_MAIN_CMAKE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+    if (_relPath)
+        list (APPEND EC_API_SOURCE_FILES "${_relPath}/${ARGV0}")
+    else()
+        list (APPEND EC_API_SOURCE_FILES "${ARGV0}")
+    endif()
+    set (EC_API_SOURCE_FILES ${EC_API_SOURCE_FILES} PARENT_SCOPE)
 endmacro()
 
 macro(EC_API_ADD_HEADER_FILE)
-    list(APPEND EC_API_HEADER_FILES ${EC_API_INCLUDE_DIR}/ec/${ARGV0})
+    file(
+            RELATIVE_PATH
+            _relPath
+            $ENV{ECLIBC_MAIN_CMAKE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+    if (_relPath)
+        list (APPEND EC_API_HEADER_FILES "${_relPath}/${ARGV0}")
+    else()
+        list (APPEND EC_API_HEADER_FILES "${ARGV0}")
+    endif()
+    set (EC_API_HEADER_FILES ${EC_API_HEADER_FILES} PARENT_SCOPE)
+endmacro()
+
+macro (EXOTIC_CANDY_SYNC_FILES_WITH_PARENT)
+    set (EC_API_SOURCE_FILES ${EC_API_SOURCE_FILES} PARENT_SCOPE)
+    set (EC_API_HEADER_FILES ${EC_API_HEADER_FILES} PARENT_SCOPE)
 endmacro()
 
 ################################################################################
-# Adding files. This MAY move to appropriate subdirectories
+# Adding sub directories
 ################################################################################
-EC_API_ADD_SOURCE_FILE(map.c)
-EC_API_ADD_SOURCE_FILE(vector.c)
-EC_API_ADD_SOURCE_FILE(io.c)
-EC_API_ADD_SOURCE_FILE(printf.c)
-EC_API_ADD_SOURCE_FILE(benchmark/performance.c)
-EC_API_ADD_SOURCE_FILE(benchmark/compare.c)
-
-EC_API_ADD_HEADER_FILE(map.h)
-EC_API_ADD_HEADER_FILE(vector.h)
-EC_API_ADD_HEADER_FILE(mutex.h)
-EC_API_ADD_HEADER_FILE(io.h)
-EC_API_ADD_HEADER_FILE(types.h)
-EC_API_ADD_HEADER_FILE(printf.h)
-EC_API_ADD_HEADER_FILE(arch.h)
-EC_API_ADD_HEADER_FILE(benchmark/performance.h)
-EC_API_ADD_HEADER_FILE(benchmark/compare.h)
-
+add_subdirectory(ec)
+add_subdirectory(include)
 
 ################################################################################
 # Setting general compile options
