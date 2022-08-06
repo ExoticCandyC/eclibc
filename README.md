@@ -72,7 +72,31 @@ make
 sudo make install
 ```
 
-Please note that in order to use non-standard C compilers, you should manually introduce the compiler of choice to the CMakeLists.txt file.
+The cmake script (./configure) will automatically look for the suitable compilers in PATH and adds them to the make file. Generally speaking, the only compilers defined in this script that add themselves to the path are "GCC", "CLang", "CC" and "MinGW". So in order to add Espressif®™ or Microchip®™ compilers to the make file, one has to manually add them to path while invoking the configuration script.
+
+```bash
+git clone --depth=1 https://github.com/ExoticCandyC/eclibc.git
+cd eclibc
+PATH=$PATH:~/.espressif/tools/xtensa-esp32-elf/esp-2022r1-RC1-11.2.0/xtensa-esp32-elf/bin:/opt/microchip/xc16/v1.70/bin ./configure
+make
+sudo make install
+```
+
+The script above will install the ECLIBC library for the native compiler, "MinGW" if present, "xtensa-esp32-elf-gcc" and XC16 version 1.70. Note that each compiler and each architecture has to compile the library separately and generate the appropriate library files for the target. So, bigger number of compilers will naturally lead to longer compile and installation times. 
+
+Please note that the libray is installed into the compile specific library folders if "sudo make install" is invoked, so, you dont need to tell the compiler where to look for the library files and just adding "-leclbc" at the end of the compile command is enough to link this library with you program.
+
+You can virtuallty add the ECLIBC library to your compiler by default. To do so, you can add the following bash commands to your ~/.bashrc
+
+```bash
+mygcc() {
+    /bin/gcc $@ -leclibc
+}
+export mygcc
+alias gcc='mygcc'
+```
+
+This will effectively add the "-leclibc" to all the gcc commands you run inside your terminal and you dont need to manually invoke the "-leclibc" flag each time you want to compile using gcc. Also, adding a library to the command line will not affect compile times nor the binary size, they will only expand the knowledge of your compiler about the aforementioned library. So if you want to use this library in most of your projects, virtually adding the library to the gcc is highly recommended.
 
 Basically since the library is targeted for C89 (ANSI) standard, and compiled using heavy warning eliminations and pedantic syntax, this source code should basically be able to be compiled with any compiler that contains C89 standard functions.
 
