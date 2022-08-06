@@ -212,10 +212,10 @@ macro(EC_API_SEARCH_FOR_COMPILER)
                                "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV8}")
         set(EC_TARGET_HEADER_PATH
                                "${EC_COMPILER_PATH_${ARGV0}_${ARGV1}}/${ARGV9}")
-	print(BOLD COLOR GREEN "-- Found ${ARGV0} for target: ${ARGV4}")
+        print(BOLD COLOR GREEN "-- Found ${ARGV0} for target: ${ARGV4}")
 	
-	#add the target
-	add_library(
+        #add the target
+        add_library(
                         ${ARGV4} ${ARGV1}
                         ${EC_API_SOURCE_FILES}
                         ${EC_API_HEADER_FILES}
@@ -228,6 +228,10 @@ macro(EC_API_SEARCH_FOR_COMPILER)
                                   ${ARGV5}
                              )
                              
+
+        target_compile_options(${ARGV4} PRIVATE -DECLIBC_INTERNAL_COMPILE)
+        target_link_options   (${ARGV4} PRIVATE -DECLIBC_INTERNAL_COMPILE)
+
         # for an unknown reason, __XTENSA__ is not defined while making a
         # library. so i manually add it to the compiler.
         # Also, IDF_VER is not defined when compiling directly with xtensa.
@@ -277,6 +281,7 @@ macro(EC_API_SEARCH_FOR_COMPILER)
             target_compile_options(${ARGV4} PRIVATE -O3)
             target_compile_options(${ARGV4} PRIVATE -Wduplicated-cond)
             target_compile_options(${ARGV4} PRIVATE -Wduplicated-branches)
+            target_compile_options(${ARGV4} PRIVATE -Wno-variadic-macros)
             target_compile_options(${ARGV4} PRIVATE -pedantic)
             target_compile_options(${ARGV4} PRIVATE -Wpedantic)
             target_compile_options(${ARGV4} PRIVATE -ftree-loop-vectorize)

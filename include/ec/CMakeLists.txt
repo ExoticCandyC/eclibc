@@ -8,6 +8,10 @@ EC_API_ADD_HEADER_FILE(io.h)
 EC_API_ADD_HEADER_FILE(types.h)
 EC_API_ADD_HEADER_FILE(printf.h)
 EC_API_ADD_HEADER_FILE(arch.h)
+EC_API_ADD_HEADER_FILE(log.h)
+
+
+
 
 add_subdirectory(benchmark)
 

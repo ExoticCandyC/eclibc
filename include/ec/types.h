@@ -48,7 +48,28 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
+#include <stdint.h>
+#include <stdbool.h>
 
+#ifndef DISABLED
+#define DISABLED 0
+#endif
+
+#ifndef ENABLED
+#define ENABLED 1
+#endif
+
+typedef enum
+{
+    log_none        = 0,
+    log_error       = 1,
+    log_warning     = 2,
+    log_info        = 3,
+    log_debug       = 4,
+    log_internal    = 5,
+    log_all         = 6,
+    log_MAX         = 7
+} log_level;
 
 #ifdef __cplusplus
 }
