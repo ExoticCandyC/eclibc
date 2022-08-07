@@ -29,8 +29,42 @@ extern "C"
 {
 #endif
 
+
+uint32_t __emoji_value_falg_whales0[] =
+    {0x1F3F4,
+     0xE0067,
+     0xE0062,
+     0xE0077,
+     0xE006C,
+     0xE0073,
+     0xE007F
+    };
+
+
+uint32_t __emoji_value_falg_whales1[] =
+    {0x1F3F4,
+     0xE0067,
+     0xE0062,
+     0xE0077,
+     0xE006C,
+     0xE0073,
+     0xE007F
+    };
+
+
+uint32_t __emoji_value_falg_whales2[] =
+    {0x1F3F4,
+     0xE0067,
+     0xE0062,
+     0xE0077,
+     0xE006C,
+     0xE0073,
+     0xE007F
+    };
+
 typedef int DUMMY_TYPEDEF_TO_AVOID_PEDANTIC_ERROR;
 
 #ifdef __cplusplus
 }
 #endif
+

@@ -299,7 +299,7 @@
  *              It should accompany "printf_hex16()"
  */
 #define expand_hex16(value)                                                    \
-    ((uint8_t)((value >> 8) & 0xFF)), Expand_HEX8(value)
+    ((uint8_t)((value >> 8) & 0xFF)), expand_hex8(value)
 
 /**
  * @def expand_hex24(value)
@@ -308,7 +308,7 @@
  *              It should accompany "printf_hex24()"
  */
 #define expand_hex24(value)                                                    \
-    ((uint8_t)((value >> 16) & 0xFF)), Expand_HEX16(value)
+    ((uint8_t)((value >> 16) & 0xFF)), expand_hex16(value)
 
 /**
  * @def expand_hex32(value)
@@ -317,7 +317,7 @@
  *              It should accompany "printf_hex32()"
  */
 #define expand_hex32(value)                                                    \
-    ((uint8_t)(value >> 24) & 0xFF)),  Expand_HEX24(value)
+    ((uint8_t)((value >> 24) & 0xFF)),  expand_hex24(value)
 
 /**
  * @def expand_hex48(value)
@@ -327,7 +327,7 @@
  */
 #define expand_hex48(value)                                                    \
     ((uint8_t)(value >> 40) & 0xFF)), ((uint8_t)(value >> 32) & 0xFF)),        \
-    Expand_HEX32(value)
+    expand_hex32(value)
 
 #define expand_MAC(value)   expand_hex48(value)
 

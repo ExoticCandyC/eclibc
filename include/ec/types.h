@@ -71,6 +71,8 @@ typedef enum
     log_MAX         = 7
 } log_level;
 
+typedef uint32_t utf8_t;
+
 #ifdef __cplusplus
 }
 #endif

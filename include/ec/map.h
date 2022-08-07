@@ -48,6 +48,10 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
+#include <stdint.h>
+extern uint32_t __emoji_value_falg_whales0[];
+extern uint32_t __emoji_value_falg_whales1[];
+extern uint32_t __emoji_value_falg_whales2[];
 
 
 #ifdef __cplusplus
