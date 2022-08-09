@@ -93,6 +93,7 @@ add_subdirectory(include)
 # Setting general compile options
 ################################################################################
 add_compile_options(-I"${EC_API_INCLUDE_DIR}")
+add_compile_options(-lm)
 add_compile_options(-fPIC)
 add_compile_options(-std=c99)
 add_compile_options(-Werror)
@@ -109,6 +110,7 @@ add_compile_options(-Wunused-macros)
 ################################################################################
 # Setting general link options
 ################################################################################
+add_link_options(-lm)
 add_link_options(-fPIC)
 add_link_options(-std=c99)
 add_link_options(-Werror)

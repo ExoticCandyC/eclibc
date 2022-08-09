@@ -1,4 +1,4 @@
-/* <map.c> -*- C -*- */
+/* <itoa.c> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -22,16 +22,25 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <ec/map.h>
+#include <ec/itoa.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-typedef int DUMMY_TYPEDEF_TO_AVOID_PEDANTIC_ERROR;
+/**
+ * @brief Lower-case digits.
+ */
+const char __ec_lower_digits[36]
+        = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+/**
+ * @brief Upper-case digits.
+ */
+const char __ec_upper_digits[36]
+        = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 #ifdef __cplusplus
 }
 #endif
-
