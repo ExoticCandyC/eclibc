@@ -106,6 +106,7 @@ add_compile_options(-Wcast-qual)
 add_compile_options(-Wconversion)
 add_compile_options(-Wundef)
 add_compile_options(-Wunused-macros)
+add_compile_options(-Wno-strict-aliasing)
 
 ################################################################################
 # Setting general link options
@@ -123,6 +124,7 @@ add_link_options(-Wcast-qual)
 add_link_options(-Wconversion)
 add_link_options(-Wundef)
 add_link_options(-Wunused-macros)
+add_link_options(-Wno-strict-aliasing)
 
 ################################################################################
 # Building the package config file
@@ -280,7 +282,7 @@ elseif(${ARGV4} MATCHES eclibcXC32)
     target_link_options(${ARGV4} PRIVATE -DXC32)
     target_link_options(${ARGV4} PRIVATE -O2)
 else()
-    target_compile_options(${ARGV4} PRIVATE -Os)
+    target_compile_options(${ARGV4} PRIVATE -Ofast)
     target_compile_options(${ARGV4} PRIVATE -Wduplicated-cond)
     target_compile_options(${ARGV4} PRIVATE -Wduplicated-branches)
     target_compile_options(${ARGV4} PRIVATE -Wno-variadic-macros)
@@ -289,7 +291,7 @@ else()
     target_compile_options(${ARGV4} PRIVATE -fstack-protector)
     target_compile_options(${ARGV4} PRIVATE -flto)
 
-    target_link_options(${ARGV4} PRIVATE -Os)
+    target_link_options(${ARGV4} PRIVATE -Ofast)
     target_link_options(${ARGV4} PRIVATE -Wduplicated-cond)
     target_link_options(${ARGV4} PRIVATE -Wduplicated-branches)
     target_link_options(${ARGV4} PRIVATE -pedantic)

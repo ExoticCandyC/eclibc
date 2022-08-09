@@ -1,4 +1,4 @@
-/* <pad_string.h> -*- C -*- */
+/* <vprintf_internal.h> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -22,13 +22,11 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <stdarg.h>
 #include <stdio.h>
-#include <ec/io.h>
-#include <ec/arch.h>
 
-#ifndef ECLIBC_INTERNAL_PAD_STRING_H
-#define ECLIBC_INTERNAL_PAD_STRING_H 1
-
+#ifndef ECLIBC_INTERNAL_VPRINTF_INTERNAL_H
+#define ECLIBC_INTERNAL_VPRINTF_INTERNAL_H 1
 
 #ifdef __cplusplus
 extern "C"
@@ -53,53 +51,7 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
-#if !(defined(XC16) || defined(XC32))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
 
-static inline void
-__attribute__ ((unused, always_inline))
-ec_fpad_string(FILE * stream, int padSize, char padChar,
-                char *__restrict start, char *__restrict end)
-{
-    int rpad = padSize - (int)(start - end);
-    char *__restrict lpad = end - padSize;
-
-#if !(defined(XC16) || defined(XC32))
-    while(lpad++ < start)
-        ec_fputc(padChar, stream);
-    /*while(start < end)
-        ec_fputc(*start++, stream);*/
-    ec_fputs(start, stream);
-    while(rpad++ < 0)
-        ec_fputc(padChar, stream);
-#else
-    while(lpad++ < start)
-        ec_fputc((unsigned char)padChar, stream);
-    /*while(start < end)
-        ec_fputc((unsigned char)*start++, stream);*/
-    ec_fputs(start, stream);
-    while(rpad++ < 0)
-        ec_fputc((unsigned char)padChar, stream);
-#endif
-}
-
-#if !(defined(XC16) || defined(XC32))
-#pragma GCC diagnostic pop
-#endif
-
-static inline char *
-__attribute__ ((unused, always_inline))
-ec_pad_num_string(int padSize, char *__restrict start, char *__restrict end)
-{
-    char *__restrict lpad = end - padSize;
-    if(padSize <= 0)
-        return start;
-    while(lpad < start)
-        *--start = '0';
-    return lpad;
-}
 
 #ifdef __cplusplus
 }

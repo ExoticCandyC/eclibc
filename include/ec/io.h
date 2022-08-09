@@ -55,7 +55,11 @@ extern "C"
 /*                                    io.h                                    */
 /******************************************************************************/
 
-#define ec_put(_ch, _fp) putc(_ch, _fp)
+#define ec_fputc(_ch, _fp) fputc(_ch, _fp)
+
+#define ec_fputs(_ch, _fp) fputs(_ch, _fp)
+
+#define ec_fwrite(_ptr, _len, _fp)   fwrite(_ptr, 1, (size_t)_len, _fp)
 
 #ifdef __glibc_unlikely
 /* Macro taken from the glibc headers. Put here to unify the macro accross    *
