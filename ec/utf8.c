@@ -71,7 +71,7 @@ typedef union
         unsigned int byte1 : 3;
         unsigned int : 11;
     } size4;
-    utf8_t data;
+    ec_utf8_t data;
 } __utf_decoder;
 
 /**
@@ -81,7 +81,7 @@ typedef union
  * @return                  0 if the value doesn't expand to the given index,
  *                          and the appropriate character if it exists.
  */
-char ea_utf8_get_byte(utf8_t value, uint8_t index)
+char ea_utf8_get_byte(ec_utf8_t value, uint8_t index)
 {
     __utf_decoder Template;
     Template.data = value;
@@ -129,7 +129,7 @@ char ea_utf8_get_byte(utf8_t value, uint8_t index)
  * @param [out]pointer      The pointer to the target string to hold the
  *                          decoded string.
  */
-void ea_utf8_decode  (utf8_t value, char *pointer)
+void ea_utf8_decode  (ec_utf8_t value, char *pointer)
 {
     uint8_t index;
     for(index = 0; index < 4; index++)

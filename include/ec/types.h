@@ -22,6 +22,10 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <ec/arch.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 #ifndef ECLIBC_TYPES_H
 #define ECLIBC_TYPES_H 1
 
@@ -48,9 +52,6 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
-#include <stdint.h>
-#include <stdbool.h>
-
 #ifndef DISABLED
 #define DISABLED 0
 #endif
@@ -71,7 +72,133 @@ typedef enum
     log_MAX         = 7
 } log_level;
 
-typedef uint32_t utf8_t;
+#if (EC_ARCH > 8)
+typedef uint64_t ec_timetick_t; /**< time tick is a unit of a hundreadth seconds */
+#endif
+typedef uint32_t ec_time_seconds_t; /**< time of day, turned into seconds        */
+typedef uint32_t ec_utf8_t;
+
+#if (EC_ARCH > 8)
+typedef uint64_t ec_phonenumber_t;
+#else
+typedef struct
+{
+    uint32_t part1;
+    uint32_t part2;
+} ec_phonenumber_t;
+#endif
+
+#define ec_make_IPv4(_IPobj, _byte1, _byte2, _byte3, _byte4)                   \
+    {                                                                          \
+        _IPobj.display_string.byte1 = _byte1;                                  \
+        _IPobj.display_string.byte2 = _byte2;                                  \
+        _IPobj.display_string.byte3 = _byte3;                                  \
+        _IPobj.display_string.byte4 = _byte4;                                  \
+    }
+
+#define ec_make_IPv6(_IPobj, _byte1, _byte2, _byte3, _byte4,                   \
+                             _byte5, _byte6, _byte7, _byte8)                   \
+    {                                                                          \
+        _IPobj.display_string.byte1 = _byte1;                                  \
+        _IPobj.display_string.byte2 = _byte2;                                  \
+        _IPobj.display_string.byte3 = _byte3;                                  \
+        _IPobj.display_string.byte4 = _byte4;                                  \
+        _IPobj.display_string.byte5 = _byte5;                                  \
+        _IPobj.display_string.byte6 = _byte6;                                  \
+        _IPobj.display_string.byte7 = _byte7;                                  \
+        _IPobj.display_string.byte8 = _byte8;                                  \
+    }
+
+#define ec_make_MAC(_MACobj, _byte1, _byte2, _byte3, _byte4, _byte5, _byte6)   \
+    {                                                                          \
+        _MACobj.display_string.byte1 = _byte1;                                 \
+        _MACobj.display_string.byte2 = _byte2;                                 \
+        _MACobj.display_string.byte3 = _byte3;                                 \
+        _MACobj.display_string.byte4 = _byte4;                                 \
+        _MACobj.display_string.byte5 = _byte5;                                 \
+        _MACobj.display_string.byte6 = _byte6;                                 \
+    }
+
+#define ec_make_cisco_MAC(_MACobj, _byte1, _byte2, _byte3)                     \
+    {                                                                          \
+        _MACobj.cisco_string.byte1 = _byte1;                                   \
+        _MACobj.cisco_string.byte2 = _byte2;                                   \
+        _MACobj.cisco_string.byte3 = _byte3;                                   \
+    }
+
+typedef union
+{
+    /* IPv4: 241.32.156.85 */
+    struct
+    {
+        unsigned int byte4 : 8;
+        unsigned int byte3 : 8;
+        unsigned int byte2 : 8;
+        unsigned int byte1 : 8;
+    } display_string;
+    uint32_t IP;
+} ec_ipv4_t;
+
+typedef union
+{
+    /* IPv6: 2001:0db8:85a3:0000:0000:8a2e:0370:7334 */
+    struct
+    {
+        unsigned int byte8 : 16;
+        unsigned int byte7 : 16;
+        unsigned int byte6 : 16;
+        unsigned int byte5 : 16;
+        unsigned int byte4 : 16;
+        unsigned int byte3 : 16;
+        unsigned int byte2 : 16;
+        unsigned int byte1 : 16;
+    } display_string;
+#   if (EC_ARCH > 8)
+    struct
+    {
+        uint64_t part1;
+        uint64_t part2;
+    } _64bit;
+#   endif
+    struct
+    {
+        uint32_t part1;
+        uint32_t part2;
+        uint32_t part3;
+        uint32_t part4;
+    } _32bit;
+} ec_ipv6_t;
+
+typedef union
+{
+    struct
+    {
+        unsigned int byte6 : 8;
+        unsigned int byte5 : 8;
+        unsigned int byte4 : 8;
+        unsigned int byte3 : 8;
+        unsigned int byte2 : 8;
+        unsigned int byte1 : 8;
+        unsigned int       : 16;
+    } display_string;
+    struct
+    {
+        unsigned int byte3 : 16;
+        unsigned int byte2 : 16;
+        unsigned int byte1 : 16;
+        unsigned int       : 16;
+    } cisco_string;
+#   if (EC_ARCH > 8)
+    uint64_t MAC;
+#   else
+    struct
+    {
+        uint32_t part1;
+        uint16_t part2;
+        unsigned int : 16;
+    } MAC;
+#   endif
+} ec_mac_t;
 
 #ifdef __cplusplus
 }

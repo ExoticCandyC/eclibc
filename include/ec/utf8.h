@@ -87,7 +87,7 @@ extern "C"
  * @return                  0 if the value doesn't expand to the given index,
  *                          and the appropriate character if it exists.
  */
-char ea_utf8_get_byte(utf8_t value, uint8_t index);
+char ea_utf8_get_byte(ec_utf8_t value, uint8_t index);
 
 /**
  * @brief ea_utf8_decode    Prints the given UTF8 character into the string
@@ -98,7 +98,7 @@ char ea_utf8_get_byte(utf8_t value, uint8_t index);
  * @param [out]pointer      The pointer to the target string to hold the
  *                          decoded string.
  */
-void ea_utf8_decode  (utf8_t value, char *pointer);
+void ea_utf8_decode  (ec_utf8_t value, char *pointer);
 
 #ifdef __cplusplus
 }

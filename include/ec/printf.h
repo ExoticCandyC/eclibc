@@ -27,11 +27,60 @@
 #include <stddef.h>
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifndef ECLIBC_PRINTF_H
 #define ECLIBC_PRINTF_H 1
 
 #include <ec/arch.h>
+
+/* Since different compilers and different platforms implement NULL in a
+ * different manner, EC_NULL is a helping macro to unify the NULL pointer over
+ * all platforms.
+ * E.g. some platforms have __builtin_null (like XC16) and some define it the
+ *      same exact way.
+ */
+#ifndef EC_NULL
+#define EC_NULL ((void *)0)
+#endif
+
+/* All CPP compilers on the other hand, use the same exact NULL pointer on all
+ * platforms. So, there is no need to change the course of standard C++ library.
+ */
+#ifdef __cplusplus
+#undef EC_NULL
+#define EC_NULL NULL
+#endif
+
+#ifdef XC16
+
+typedef void (*__ec_xc16_printf_handler_t)(uint8_t);
+
+/**
+ * @brief ec_xc16_toggle_stderr     Switches from stdout to stderr and vice
+ *                                  versa.
+ * @param [in]state                 true:  stderr is selected
+ *                                  false: stdout is selected
+ */
+void ec_xc16_toggle_stderr(bool state);
+
+/**
+ * @brief ec_xc16_set_stdout_handler    This function is used to set the
+ *                                      function used for stdout.
+ * @param [in]handler                   The function that will handle the
+ *                                      transmission of characters.
+ */
+void ec_xc16_set_stdout_handler(__ec_xc16_printf_handler_t handler);
+
+/**
+ * @brief ec_xc16_set_stderr_handler    This function is used to set the
+ *                                      function used for stderr.
+ * @param [in]handler                   The function that will handle the
+ *                                      transmission of characters.
+ */
+void ec_xc16_set_stderr_handler(__ec_xc16_printf_handler_t handler);
+
+#endif
 
 /**
  * @file    printf.h
@@ -213,7 +262,7 @@
  */
 #define printf_MAC()                                                           \
                 printf_hex8() ":" printf_hex8() ":" printf_hex8() ":"          \
-                printf_hex8() ":" printf_hex8() ":" printf_hex8() ":"
+                printf_hex8() ":" printf_hex8() ":" printf_hex8()
 
 /**
  * @def printf_timezone()

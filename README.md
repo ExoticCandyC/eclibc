@@ -27,14 +27,14 @@
 🔸 [Dependencies](#dependencies) \
 🔸 [Installation](#installation) \
 🔸 [Documentation](#documentation) \
-🔸 [Benchmark tools](#benchmark) 
+🔸 [Benchmark tools](#benchmark)
 
 
 
 
 ## Brief description
 
-**eclibc** is a C library, containing everyday use functions implemented in ANSI C language. This library can be compiled by most 16bit, 32bit and 64bit compilers, including:
+**eclibc** is a C library, containing everyday use functions implemented in C language, using C99 standard. This library can be compiled by most 16bit, 32bit and 64bit compilers, including:
 
 **Computer targets:**<br />
 <a href="https://gcc.gnu.org" style="text-decoration:none;">🔹 GCC</a><br />
@@ -52,6 +52,7 @@
 <a href="https://www.microchip.com/en-us/education/developer-help/learn-tools-software/mcu-mpu/compilers/xc16" style="text-decoration:none;">🔸 xc16-gcc</a><br />
 <a href="https://www.microchip.com/en-us/education/developer-help/learn-tools-software/mcu-mpu/compilers/xc32" style="text-decoration:none;">🔸 xc32-gcc</a><br />
 
+This library was targeted to be an ANSI C project. But due to implementation requirements, The project has switched to C99 from C89 to enable the "inline" keyword.
 
 ## Dependencies
 
@@ -82,7 +83,7 @@ make
 sudo make install
 ```
 
-The script above will install the ECLIBC library for the native compiler, "MinGW" if present, "xtensa-esp32-elf-gcc" and XC16 version 1.70. Note that each compiler and each architecture has to compile the library separately and generate the appropriate library files for the target. So, bigger number of compilers will naturally lead to longer compile and installation times. 
+The script above will install the ECLIBC library for the native compiler, "MinGW" if present, "xtensa-esp32-elf-gcc" and XC16 version 1.70. Note that each compiler and each architecture has to compile the library separately and generate the appropriate library files for the target. So, bigger number of compilers will naturally lead to longer compile and installation times.
 
 Please note that the libray is installed into the compile specific library folders if "sudo make install" is invoked, so, you dont need to tell the compiler where to look for the library files and just adding "-leclibc" at the end of the compile command is enough to link this library with you program.
 
@@ -98,7 +99,7 @@ alias gcc='mygcc'
 
 This will effectively add the "-leclibc" to all the gcc commands you run inside your terminal and you dont need to manually invoke the "-leclibc" flag each time you want to compile using gcc. Also, adding a library to the command line will not affect compile times nor the binary size, they will only expand the knowledge of your compiler about the aforementioned library. So if you want to use this library in most of your projects, virtually adding the library to the gcc is highly recommended.
 
-Basically since the library is targeted for C89 (ANSI) standard, and compiled using heavy warning eliminations and pedantic syntax, this source code should basically be able to be compiled with any compiler that contains C89 standard functions.
+Basically since the library is targeted for C99 standard, which a widely adopted standard, and compiled using heavy warning eliminations and pedantic syntax, this source code should basically be able to be compiled with any compiler that contains C99 standard functions.
 
 As an example, Micochip© XC8 doesn't have an implementation of "free" and "malloc" functions. So it will produce errors during compilation.
 
@@ -108,7 +109,7 @@ The testings and developements are done on:<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3️⃣ Arch Linux, using Micochip© XC16 for PIC24FJ256GA106 micro-controller unit and dsPIC33CK256MP406 micro-controller unit.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4️⃣ Gentoo Linux on Raspberry Pi 4.<br />
 
-Since the standard C protocols are being followed, and CMake is available on most platforms, one should easily be able to compile this library on any other target including FreeBSD, OpenBSD, OSX. 
+Since the standard C protocols are being followed, and CMake is available on most platforms, one should easily be able to compile this library on any other target including FreeBSD, OpenBSD, OSX.
 
 As of August 2022, there are no plans to enable official support for Microsoft Windows®. But generally speaking, making the library compatible with MinGW32-GCC is a future goal and that would enable the unofficial support for Microsoft Windows® targets.
 
@@ -234,5 +235,3 @@ Execution of the program took:
 
 Press any key to exit.
 ```
-
-

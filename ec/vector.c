@@ -22,8 +22,8 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <ec/types.h>
 #include <ec/vector.h>
-
 /*
  * destructor is defined inside my own private API. So it is just a safeguard
  * to make sure it is not defined as my cutom macro. Feel free to delete these
