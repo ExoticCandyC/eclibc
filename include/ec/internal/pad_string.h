@@ -1,4 +1,4 @@
-/* <fota.h> -*- C -*- */
+/* <pad_string.h> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -22,13 +22,11 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <math.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <ec/itoa.h>
+#include <stdio.h>
+#include <ec/io.h>
 
-#ifndef ECLIBC_FTOA_H
-#define ECLIBC_FTOA_H 1
+#ifndef ECLIBC_INTERNAL_PAD_STRING_H
+#define ECLIBC_INTERNAL_PAD_STRING_H 1
 
 #ifdef __cplusplus
 extern "C"
@@ -52,44 +50,51 @@ extern "C"
 #undef EC_NULL
 #define EC_NULL NULL
 #endif
-#include    <stdio.h>
-/**
- * @brief ec_ecvt_break     breaks a double value into it's sub-parts.
- * @param [in]value         the double value to be separated.
- * @param [out]intpart      the integer part of the double value.
- * @param [in/out]decpart   [in]the number of decimal digits requested.
- *                          [out]the decimal part of the double value.
- */
+
+#if !(defined(XC16) || defined(XC32))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+
 static inline void
 __attribute__ ((unused, always_inline))
-ec_break_double(double value, int64_t *intpart, uint64_t *decpart)
+ec_fpad_string(FILE * stream, int padSize, char padChar,
+                char *__restrict start, char *__restrict end)
 {
-    *intpart = (int64_t)value;
-    double temp = (double)(value - (double)(*intpart));
-    *decpart = (uint64_t)(((temp < 0) ? (temp * -1) : temp) *
-                                                    pow(10, (double)*decpart));
+    int rpad = padSize - (int)(start - end);
+    char *__restrict lpad = end - padSize;
+#if !(defined(XC16) || defined(XC32))
+    while(lpad++ < start)
+        ec_putc_unlocked(padChar, stream);
+    while(start < end)
+        ec_putc_unlocked(*start++, stream);
+    while(rpad++ < 0)
+        ec_putc_unlocked(padChar, stream);
+#else
+    while(lpad++ < start)
+        ec_putc_unlocked((unsigned char)padChar, stream);
+    while(start < end)
+        ec_putc_unlocked((unsigned char)*start++, stream);
+    while(rpad++ < 0)
+        ec_putc_unlocked((unsigned char)padChar, stream);
+#endif
 }
 
-/**
- * @brief ec_ftoa       Converts a double value to a string.
- * @param [in]value     The value to be converted to string.
- * @param [in]buflim    The pointer to the END of the string to be used for the
- *                      conversion.
- * @param [in]dec       Number of decimal places to be generated.
- * @return              The pointer to the start of the generated string.
- */
+#if !(defined(XC16) || defined(XC32))
+#pragma GCC diagnostic pop
+#endif
+
 static inline char *
 __attribute__ ((unused, always_inline))
-ec_ftoa(double value, char *__restrict buflim, int dec)
+ec_pad_num_string(int padSize, char *__restrict start, char *__restrict end)
 {
-    int64_t intpart;
-    uint64_t decpart = (uint64_t)dec;
-    ec_break_double(value, &intpart, &decpart);
-    buflim = ec_itoa_uint64_t(decpart, buflim, 10, 1);
-    *--buflim = '.';
-    return ec_itoa_int64_t(intpart, buflim, 10, 1);
+    char *__restrict lpad = end - padSize;
+    if(padSize <= 0)
+        return start;
+    while(lpad < start)
+        *--start = '0';
+    return lpad;
 }
-
 
 #ifdef __cplusplus
 }

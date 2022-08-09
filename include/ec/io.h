@@ -51,6 +51,23 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
+/******************************************************************************/
+/*                                    io.h                                    */
+/******************************************************************************/
+
+#define ec_put(_ch, _fp) putc(_ch, _fp)
+
+#ifdef __glibc_unlikely
+/* Macro taken from the glibc headers. Put here to unify the macro accross    *
+ * different compilers and different platforms.                               */
+#define ec_putc_unlocked(_ch, _fp)                                             \
+  (!((_fp)->_IO_write_ptr >= (_fp)->_IO_write_end)                             \
+   ? __overflow (_fp, (unsigned char) (_ch))                                   \
+   : (unsigned char) (*(_fp)->_IO_write_ptr++ = (_ch)))
+#else
+#define ec_putc_unlocked(_ch, _fp) putc(_ch, _fp)
+#endif
+
 
 #if defined(__linux__) || defined(_WIN32)
 

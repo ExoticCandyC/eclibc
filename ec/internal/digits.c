@@ -1,4 +1,4 @@
-/* <itoa.c> -*- C -*- */
+/* <digits.c> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -22,7 +22,8 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <ec/itoa.h>
+/* Inclusion just to get compile messages for the inline functions inside the
+ * file.                                                                      */
 
 #ifdef __cplusplus
 extern "C"

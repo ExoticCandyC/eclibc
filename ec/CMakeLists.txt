@@ -8,10 +8,10 @@ EC_API_ADD_SOURCE_FILE(printf.c)
 EC_API_ADD_SOURCE_FILE(log.c)
 EC_API_ADD_SOURCE_FILE(emoji.c)
 EC_API_ADD_SOURCE_FILE(utf8.c)
-EC_API_ADD_SOURCE_FILE(itoa.c)
 
 
 
 add_subdirectory(benchmark)
+add_subdirectory(internal)
 
 EXOTIC_CANDY_SYNC_FILES_WITH_PARENT()
