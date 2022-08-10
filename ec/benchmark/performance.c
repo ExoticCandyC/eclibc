@@ -35,9 +35,9 @@
 #undef  ________DO_NOT_ENABLE_PERFORMANCE_TEST________
 
 #include <sys/time.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ec/io.h>
 
 /* Since different compilers and different platforms implement NULL in a
  * different manner, EC_NULL is a helping macro to unify the NULL pointer over
@@ -91,37 +91,37 @@ void ____ec_api_performance_destructor()
     else
         accuracy = ((double)1 - fracture) * 100;
     for(index = 0; index < 3; index++)
-        printf("\r\n");
-    printf("eclibc: ec/benchmark/performance.h:\n\n\r");
-    printf("          Program finished running.     \r\n");
+        ec_printf("\r\n");
+    ec_printf("eclibc: ec/benchmark/performance.h:\n\n\r");
+    ec_printf("          Program finished running.     \r\n");
     #ifdef __linux__
-    printf("    Press any key to see the statistics.\r\n");
+    ec_printf("    Press any key to see the statistics.\r\n");
     system("read -r -n 1 -s");
     #endif
     for(index = 0; index < 5; index++)
-        printf("\r\n");
+        ec_printf("\r\n");
     if(accuracy < 0.01)
-        printf("Warning!! Extremely inacurate data are being presented here."
+        ec_printf("Warning!! Extremely inacurate data are being presented here."
                "\r\nAccuracy of the calculated time difference is less than "
                "0.01%%\r\n");
     else if(accuracy < 30)
-        printf("Warning!! The calculated data is not to be trusted in only a "
-               "few iterations, run at least 1000 iterations to get a more "
+        ec_printf("Warning!! The calculated data is not to be trusted in only "
+               "a few iterations, run at least 1000 iterations to get a more "
                "accurate result.\r\n"
                "Accuracy of the calculated time difference: %.2f%%\r\n",
                accuracy);
     else
-        printf("Accuracy of the calculated time difference: %.2f%%\r\n",
+        ec_printf("Accuracy of the calculated time difference: %.2f%%\r\n",
                accuracy);
-    printf("\r\n");
-    printf("Execution started at:\r\n\t\t%s\r\n",
+    ec_printf("\r\n");
+    ec_printf("Execution started at:\r\n\t\t%s\r\n",
                                 ctime(&__ec_api_performance_test_start_time));
-    printf("Execution finished at:\r\n\t\t%s\r\n",
+    ec_printf("Execution finished at:\r\n\t\t%s\r\n",
                                 ctime(&now));
-    printf("Execution of the program took:\r\n\t\t%lu[us]\r\n\n\n",
+    ec_printf("Execution of the program took:\r\n\t\t%lu[us]\r\n\n\n",
                                                    (long unsigned int)duration);
     #ifdef __linux__
-    printf("Press any key to exit.\r\n");
+    ec_printf("Press any key to exit.\r\n");
     system("read -r -n 1 -s");
     #endif
 }

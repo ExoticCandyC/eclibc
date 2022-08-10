@@ -1,9 +1,9 @@
 
 #include <ec/log.h>
 
+#include <ec/io.h>
 #include <ec/printf.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <string.h>
 
 #ifdef __cplusplus
@@ -27,17 +27,17 @@ void eclogprintf(const char *CXXsuffix, const char* header, const char* project,
         target = stderr;
     #endif
     va_start(argptr, format);
-    fprintf(target, printf_string(), CXXsuffix);
+    ec_fprintf(target, printf_string(), CXXsuffix);
     if(filename != EC_NULL)
-        fprintf(target, printf_string() ":" printf_string(),
+        ec_fprintf(target, printf_string() ":" printf_string(),
                                         filename, (lineNumber == 0 ? " " : ""));
     if(lineNumber != 0)
-        fprintf(target, printf_uint16(1,1) ": ", lineNumber);
+        ec_fprintf(target, printf_uint16(1,1) ": ", lineNumber);
     if(project != EC_NULL)
-        fprintf(target, printf_string() ": ", project);
-    fprintf(target, printf_string() ": ", header);
-    vfprintf(target, format, argptr);
-    fprintf(target, "\r\n");
+        ec_fprintf(target, printf_string() ": ", project);
+    ec_fprintf(target, printf_string() ": ", header);
+    ec_vfprintf(target, format, argptr);
+    ec_fprintf(target, "\r\n");
     va_end(argptr);
 }
 

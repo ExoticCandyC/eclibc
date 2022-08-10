@@ -45,69 +45,40 @@ extern "C"
  */
 #if !(defined(XC16) || defined(XC32))
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 const char    *__restrict __ec_printf_temp_buffer_tail;
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 const char    *__restrict __ec_printf_temp_buffer;
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 char    *__restrict NumBufferEnd;
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 char    *__restrict NumBuffer;
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 int     leftNumber;
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 int     rightNumber;
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 uint8_t __ec_printf_Number_set;      /* | 1 = right ...... | 2 = left */
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 uint8_t __ec_printf_Number_negative; /* | 1 = right ...... | 2 = left */
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 uint8_t __ec_printf_long_count;      /* 0: half, 1: normal, 2: long, 2 >: ll */
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
-bool    rightNumberSet;
+uint8_t __ec_printf_show_sign;       /* 1 = Do, 0 = Dont, 2 = Maybe*/
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
-uint8_t __ec_printf_show_sign; /* 1 = Do, 0 = Dont, 2 = Maybe*/
-
-#if !(defined(XC16) || defined(XC32))
-__attribute__ ((visibility("hidden")))
-#endif
 bool    __ec_printf_side_right;
 
-#if !(defined(XC16) || defined(XC32))
 __attribute__ ((visibility("hidden")))
-#endif
 struct tm __ec_printf_scratch_memory;
 
 #endif
@@ -196,14 +167,14 @@ ec_vfprintf(FILE *__restrict __stream,
     const char    *__restrict __ec_printf_temp_buffer;
     char    *__restrict NumBufferEnd;
     char    *__restrict NumBuffer;
-    int     leftNumber;
-    int     rightNumber;
-    uint8_t __ec_printf_Number_set;      /* | 1 = right ...... | 2 = left */
-    uint8_t __ec_printf_Number_negative; /* | 1 = right ...... | 2 = left */
-    uint8_t __ec_printf_long_count;      /* 0: half, 1: normal, 2: long, 2 >: ll */
-    bool    rightNumberSet;
-    uint8_t __ec_printf_show_sign; /* 1 = Do, 0 = Dont, 2 = Maybe*/
-    bool    __ec_printf_side_right;
+    int     leftNumber = 0;
+    int     rightNumber = 0;
+    uint8_t __ec_printf_Number_set = 0;     /* | 1 = right ...... | 2 = left */
+    uint8_t __ec_printf_Number_negative = 0;/* | 1 = right ...... | 2 = left */
+    uint8_t __ec_printf_long_count = 1;     /* 0: half, 1: normal, 2: long,
+                                                                      2 >: ll */
+    uint8_t __ec_printf_show_sign = 0; /* 1 = Do, 0 = Dont, 2 = Maybe*/
+    bool    __ec_printf_side_right = false;
     struct tm __ec_printf_scratch_memory;
     #endif
 
@@ -222,7 +193,8 @@ ec_vfprintf(FILE *__restrict __stream,
             return;
         }
     }
-    ec_fwrite(__ec_printf_temp_buffer_tail, (__ec_printf_temp_buffer - __ec_printf_temp_buffer_tail), __stream);
+    ec_fwrite(__ec_printf_temp_buffer_tail, (__ec_printf_temp_buffer -
+                                       __ec_printf_temp_buffer_tail), __stream);
     __ec_printf_temp_buffer_tail = __ec_printf_temp_buffer;
     __format = __ec_printf_temp_buffer - 1;
     while(*++__format != '\0')
@@ -234,9 +206,9 @@ ec_vfprintf(FILE *__restrict __stream,
                 #define CheckDigit(_char, _digit)                              \
                 case _char:                                                    \
                     __ec_printf_Number_set =                                   \
-                            __ec_printf_Number_set |                           \
+                            (uint8_t)(__ec_printf_Number_set |                 \
                                     ((__ec_printf_side_right == true)          \
-                                            ? 1 : 2);                          \
+                                            ? 1 : 2));                         \
                     __ec_printf_add_digit(_digit);                             \
                     continue;
                 CheckDigit('0', 0);
@@ -263,8 +235,8 @@ ec_vfprintf(FILE *__restrict __stream,
                     continue;
                 case '-':
                     __ec_printf_Number_negative =
-                            __ec_printf_Number_negative |
-                                    ((__ec_printf_side_right == true) ? 1 : 2);
+                            (uint8_t)(__ec_printf_Number_negative |
+                                    ((__ec_printf_side_right == true) ? 1 : 2));
                     continue;
                 case '.':
                     __ec_printf_side_right = true;
@@ -275,103 +247,16 @@ ec_vfprintf(FILE *__restrict __stream,
         }
         switch(format_type)
         {
-            case __format_ecio:
-            {
-                switch ((*__format))
-                {
-                    /* Toggle upper case mode */
-                    case eclibc_printf_upper_case:
-                        break;
-
-                    /* Format characters */
-                    case eclibc_printf_time_seconds:
-                        break;
-                    case eclibc_printf_Time_struct_tm:
-                        break;
-                    case eclibc_printf_time_seconds_short:
-                        break;
-                    case eclibc_printf_time_struct_tm_short:
-                        break;
-                    case eclibc_printf_date_2digit:
-                        break;
-                    case eclibc_printf_date_4digit:
-                        break;
-                    case eclibc_printf_utc_time:
-                        break;
-                    case eclibc_printf_base_2:
-                        break;
-                    case eclibc_printf_base_8:
-                        break;
-                    case eclibc_printf_base_16:
-                        break;
-                    case eclibc_printf_bool:
-                        break;
-                    case eclibc_printf_utf8:
-                        break;
-                    case eclibc_printf_phone_number:
-                        break;
-                    case eclibc_printf_IPv4_Address:
-                        break;
-                    case eclibc_printf_IPv6_Address:
-                        break;
-                    case eclibc_printf_MAC_PC_Version:
-                        break;
-                    case eclibc_printf_MAC_CISCO:
-                        break;
-
-                    #ifdef EC_API_EXPERIMENTAL_PRINTF_API
-                    /* The dot */
-                    case eclibc_printf_precision:
-                        break;
-
-                    /* Signs */
-                    case eclibc_printf_form_unknown_plus:
-                        break;
-                    case eclibc_printf_form_unknown_minus:
-                        break;
-
-                    /* Digits */
-                    case eclibc_printf_form_unknown_0:
-                        break;
-                    case eclibc_printf_form_unknown_1:
-                        break;
-                    case eclibc_printf_form_unknown_2:
-                        break;
-                    case eclibc_printf_form_unknown_3:
-                        break;
-                    case eclibc_printf_form_unknown_4:
-                        break;
-                    case eclibc_printf_form_unknown_5:
-                        break;
-                    case eclibc_printf_form_unknown_6:
-                        break;
-                    case eclibc_printf_form_unknown_7:
-                        break;
-                    case eclibc_printf_form_unknown_8:
-                        break;
-                    case eclibc_printf_form_unknown_9:
-                        break;
-                    #endif
-
-                    /* Wrong formating, leaving formating mode */
-                    case eclibc_printf_form_unknown_star:
-                    case eclibc_printf_custom_mode:
-                    case eclibc_printf_form_unknown_space:
-                    case eclibc_printf_form_unknown_asteric:
-                    default:
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        break;
-                };
-                break;
-            }
             case __format_std:
             {
                 switch ((*__format))
                 {
                     /* The ticket to go into ec format mode */
                     case eclibc_printf_custom_mode:
+                    {
                         format_type = __format_ecio;
                         continue;
+                    }
 
                     /* Raw characters */
                     case glibc_printf_form_percent:
@@ -653,6 +538,95 @@ ec_vfprintf(FILE *__restrict __stream,
                 }
                 break;
             }
+            case __format_ecio:
+            {
+                switch ((*__format))
+                {
+                    /* Toggle upper case mode */
+                    case eclibc_printf_upper_case:
+                        break;
+
+                    /* Format characters */
+                    case eclibc_printf_time_seconds:
+                        break;
+                    case eclibc_printf_Time_struct_tm:
+                        break;
+                    case eclibc_printf_time_seconds_short:
+                        break;
+                    case eclibc_printf_time_struct_tm_short:
+                        break;
+                    case eclibc_printf_date_2digit:
+                        break;
+                    case eclibc_printf_date_4digit:
+                        break;
+                    case eclibc_printf_utc_time:
+                        break;
+                    case eclibc_printf_base_2:
+                        break;
+                    case eclibc_printf_base_8:
+                        break;
+                    case eclibc_printf_base_16:
+                        break;
+                    case eclibc_printf_bool:
+                        break;
+                    case eclibc_printf_utf8:
+                        break;
+                    case eclibc_printf_phone_number:
+                        break;
+                    case eclibc_printf_IPv4_Address:
+                        break;
+                    case eclibc_printf_IPv6_Address:
+                        break;
+                    case eclibc_printf_MAC_PC_Version:
+                        break;
+                    case eclibc_printf_MAC_CISCO:
+                        break;
+
+                    #ifdef EC_API_EXPERIMENTAL_PRINTF_API
+                    /* The dot */
+                    case eclibc_printf_precision:
+                        break;
+
+                    /* Signs */
+                    case eclibc_printf_form_unknown_plus:
+                        break;
+                    case eclibc_printf_form_unknown_minus:
+                        break;
+
+                    /* Digits */
+                    case eclibc_printf_form_unknown_0:
+                        break;
+                    case eclibc_printf_form_unknown_1:
+                        break;
+                    case eclibc_printf_form_unknown_2:
+                        break;
+                    case eclibc_printf_form_unknown_3:
+                        break;
+                    case eclibc_printf_form_unknown_4:
+                        break;
+                    case eclibc_printf_form_unknown_5:
+                        break;
+                    case eclibc_printf_form_unknown_6:
+                        break;
+                    case eclibc_printf_form_unknown_7:
+                        break;
+                    case eclibc_printf_form_unknown_8:
+                        break;
+                    case eclibc_printf_form_unknown_9:
+                        break;
+                    #endif
+
+                    /* Wrong formating, leaving formating mode */
+                    case eclibc_printf_form_unknown_star:
+                    case eclibc_printf_custom_mode:
+                    case eclibc_printf_form_unknown_space:
+                    case eclibc_printf_form_unknown_asteric:
+                    default:
+                        EC_PRINTF_GO_TO_RAW_FORMAT();
+                        break;
+                };
+                break;
+            }
             case __format_raw:
             {
                 if(*__format == '%')
@@ -669,7 +643,8 @@ ec_vfprintf(FILE *__restrict __stream,
                     else
                         __ec_printf_show_sign = 0;
                     if(__format != __ec_printf_temp_buffer_tail)
-                        ec_fwrite(__ec_printf_temp_buffer_tail, (__format - __ec_printf_temp_buffer_tail), __stream);
+                        ec_fwrite(__ec_printf_temp_buffer_tail, (__format -
+                                       __ec_printf_temp_buffer_tail), __stream);
                 }
                 /*else
                     ec_fputc(*__format, __stream);*/
@@ -687,6 +662,8 @@ ec_vfprintf(FILE *__restrict __stream,
 #undef __ec_printf_add_digit
 #undef EC_PRINTF_GO_TO_RAW_FORMAT
 
+
+
 __attribute__((hot,noinline))
 void
 ec_fprintf(FILE *__restrict __stream, const char *__restrict __format, ...)
@@ -697,6 +674,22 @@ ec_fprintf(FILE *__restrict __stream, const char *__restrict __format, ...)
     va_end(argptr);
 }
 
+__attribute__((hot,noinline))
+void
+ec_vprintf(const char *__restrict __format, va_list __arg)
+{
+    ec_vfprintf(stdout, __format, __arg);
+}
+
+__attribute__((hot,noinline))
+void
+ec_printf(const char *__restrict __format, ...)
+{
+    va_list argptr;
+    va_start(argptr, __format);
+    ec_vfprintf(stdout, __format, argptr);
+    va_end(argptr);
+}
 
 #ifdef __cplusplus
 }

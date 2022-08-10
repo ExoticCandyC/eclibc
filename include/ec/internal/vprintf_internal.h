@@ -51,7 +51,22 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
+__attribute__((hot,noinline))
+void
+ec_vfprintf(FILE *__restrict __stream,
+                            const char *__restrict __format, va_list __arg);
 
+__attribute__((hot,noinline))
+void
+ec_fprintf(FILE *__restrict __stream, const char *__restrict __format, ...);
+
+__attribute__((hot,noinline))
+void
+ec_vprintf(const char *__restrict __format, va_list __arg);
+
+__attribute__((hot,noinline))
+void
+ec_printf(const char *__restrict __format, ...);
 
 #ifdef __cplusplus
 }

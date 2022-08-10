@@ -25,8 +25,9 @@
 #ifndef ECLIBC_IO_H
 #define ECLIBC_IO_H 1
 
-#include <ec/vector.h>
 #include <stdarg.h>
+#include <ec/vector.h>
+#include <ec/internal/vprintf_internal.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -50,10 +51,6 @@ extern "C"
 #undef EC_NULL
 #define EC_NULL NULL
 #endif
-
-/******************************************************************************/
-/*                                    io.h                                    */
-/******************************************************************************/
 
 #define ec_fputc(_ch, _fp) fputc(_ch, _fp)
 
@@ -143,7 +140,7 @@ double ec_double_popen(char *command);
  *
  *          // iterate through all the items inside the vector and print them.
  *          ec_api_vector_for_each(itr, respond_list)
- *              printf("%s\r\n", ec_api_vector_iterator_pointer(char, itr));
+ *              ec_printf("%s\r\n", ec_api_vector_iterator_pointer(char, itr));
  *
  *          // delete the vector when we are done with it.
  *          ec_api_vector_delete(respond_list);

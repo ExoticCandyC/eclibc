@@ -32,6 +32,7 @@
 #ifndef ECLIBC_PRINTF_H
 #define ECLIBC_PRINTF_H 1
 
+#include <ec/io.h>
 #include <ec/arch.h>
 
 /* Since different compilers and different platforms implement NULL in a

@@ -94,7 +94,6 @@ add_subdirectory(include)
 ################################################################################
 add_compile_options(-I"${EC_API_INCLUDE_DIR}")
 add_compile_options(-lm)
-add_compile_options(-fPIC)
 add_compile_options(-std=c99)
 add_compile_options(-Werror)
 add_compile_options(-Wall)
@@ -112,7 +111,6 @@ add_compile_options(-Wno-strict-aliasing)
 # Setting general link options
 ################################################################################
 add_link_options(-lm)
-add_link_options(-fPIC)
 add_link_options(-std=c99)
 add_link_options(-Werror)
 add_link_options(-Wall)
@@ -282,6 +280,12 @@ elseif(${ARGV4} MATCHES eclibcXC32)
     target_link_options(${ARGV4} PRIVATE -DXC32)
     target_link_options(${ARGV4} PRIVATE -O2)
 else()
+    # XC16 fails to link complicated nested switch/cases and inline functions
+    # when -fPIC is on. Since the object file in embedded systems virtually
+    # can not be address independant and the linking is always a static
+    # linking, we can safely ommit this flag for XC16 and XC32 targets.
+    target_compile_options(${ARGV4} PRIVATE -fPIC)
+
     target_compile_options(${ARGV4} PRIVATE -Ofast)
     target_compile_options(${ARGV4} PRIVATE -Wduplicated-cond)
     target_compile_options(${ARGV4} PRIVATE -Wduplicated-branches)
@@ -291,6 +295,7 @@ else()
     target_compile_options(${ARGV4} PRIVATE -fstack-protector)
     target_compile_options(${ARGV4} PRIVATE -flto)
 
+    target_link_options(${ARGV4} PRIVATE -fPIC)
     target_link_options(${ARGV4} PRIVATE -Ofast)
     target_link_options(${ARGV4} PRIVATE -Wduplicated-cond)
     target_link_options(${ARGV4} PRIVATE -Wduplicated-branches)

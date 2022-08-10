@@ -26,7 +26,6 @@
 #define _XOPEN_SOURCE
 #endif
 
-#include <stdio.h>
 #include <string.h>
 
 #include <ec/io.h>
@@ -133,7 +132,7 @@ double ec_double_popen(char *command)
  *
  *          // iterate through all the items inside the vector and print them.
  *          ec_api_vector_for_each(itr, respond_list)
- *              printf("%s\r\n", ec_api_vector_iterator_pointer(char, itr));
+ *              ec_printf("%s\r\n", ec_api_vector_iterator_pointer(char, itr));
  *
  *          // delete the vector when we are done with it.
  *          ec_api_vector_delete(respond_list);
@@ -261,7 +260,7 @@ void ec_io_flush_stderr()
  */
 void ec_io_vprintf_instant(const char *__restrict format, va_list argptr)
 {
-    vprintf(format, argptr);
+    ec_vprintf(format, argptr);
     fflush(stdout);
 }
 
