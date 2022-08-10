@@ -40,12 +40,7 @@ extern "C"
 #endif
 
 __attribute__ ((visibility("hidden")))
-ec_mutex __ec_printf_mtx_mutext;
-
-void __ec_printf_mtx_init_mutex()
-{
-    ec_mutex_init(__ec_printf_mtx_mutext);
-}
+ec_mutex __ec_printf_mtx_mutex;
 
 __attribute__ ((visibility("hidden")))
 const char    *__restrict __ec_printf_mtx_temp_buffer_tail;
@@ -166,6 +161,7 @@ ec_vfprintf_mtx(FILE *__restrict __stream,
     /* as much to satisfy a 64 bit binary and more */
     char NumBuffer_Storage[81];
     __format_type format_type = __format_raw;
+    ec_mutex_lock(__ec_printf_mtx_mutex);
     __ec_printf_mtx_numBuffer_End = NumBuffer_Storage + 80;
     *__ec_printf_mtx_numBuffer_End = '\0';
     __ec_printf_mtx_temp_buffer      = __format;
@@ -643,6 +639,7 @@ ec_vfprintf_mtx(FILE *__restrict __stream,
         };
     }
     ec_fputs(__ec_printf_mtx_temp_buffer_tail, __stream);
+    ec_mutex_unlock(__ec_printf_mtx_mutex);
 }
 
 #undef EC_SCRATCH
@@ -677,6 +674,11 @@ ec_printf_mtx(const char *__restrict __format, ...)
     va_start(argptr, __format);
     ec_vfprintf(stdout, __format, argptr);
     va_end(argptr);
+}
+
+void __ec_printf_mtx_init_mutex()
+{
+    ec_mutex_init(__ec_printf_mtx_mutex);
 }
 
 #ifdef __cplusplus

@@ -70,6 +70,26 @@ ec_break_double(double value, int64_t *intpart, uint64_t *decpart)
                                                     pow(10, (double)*decpart));
 }
 
+#ifdef experimental
+    static inline char *                                                       \
+    __attribute__ ((unused, always_inline))                                    \
+    ec_itoa_uint64_mod (uint64_t value, char *__restrict buflim,               \
+                      uint64_t base, bool upper_case)                              \
+    {                                                                          \
+        extern const char __ec_upper_digits[];                                 \
+        extern const char __ec_lower_digits[];                                 \
+        const char *digits = ((upper_case == true)                             \
+                              ? __ec_upper_digits :                            \
+                                __ec_lower_digits);                            \
+                                                                               \
+        do                                                                     \
+            *--buflim = digits[value % base];                                  \
+        while ((value /= base) != 0);                                          \
+                                                                               \
+        return buflim;                                                         \
+    }
+#endif
+
 /**
  * @brief ec_ftoa       Converts a double value to a string.
  * @param [in]value     The value to be converted to string.
