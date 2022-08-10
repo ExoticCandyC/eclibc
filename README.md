@@ -124,9 +124,9 @@ The compilers used to develop and test this library:<br />
 
 ## Documentation
 
-Wiki pages are planned to be added to the git repository, and an official website is planned to be generated that will host a begginer friendly C tutorial, beginner friendly C++ tutorial and a comprehensive guide on how to use eclibc in both C and C++<br />
-Considering my tight schedule and the fact that this project is a solo project, there is no expected date for the aforementioned documentations.
+[Wiki](https://github.com/ExoticCandyC/eclibc/wiki) page has started it's developement and over time I will complete the documentation inside the wiki pages.
 
+Soon, a stand-alone website will be created as the homepage for the ECC project, including this library. Begginer friend C and C++ tutorials and tutorials on how to use this library will be hosted on that site.
 
 ## Benchmark tools
 

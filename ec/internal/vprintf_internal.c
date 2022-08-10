@@ -301,6 +301,7 @@ ec_vfprintf(FILE *__restrict __stream,
                                 EC_PRINTF_GO_TO_RAW_FORMAT();
                                 continue;
                         };
+                        EC_PRINTF_GO_TO_RAW_FORMAT();
                         continue;
                     }
                     case glibc_printf_form_unsigned:
@@ -330,6 +331,7 @@ ec_vfprintf(FILE *__restrict __stream,
                                 EC_PRINTF_GO_TO_RAW_FORMAT();
                                 continue;
                         };
+                        EC_PRINTF_GO_TO_RAW_FORMAT();
                         continue;
                     }
                     case glibc_printf_form_octal:
@@ -359,6 +361,7 @@ ec_vfprintf(FILE *__restrict __stream,
                                 EC_PRINTF_GO_TO_RAW_FORMAT();
                                 continue;
                         };
+                        EC_PRINTF_GO_TO_RAW_FORMAT();
                         continue;
                     }
                     case glibc_printf_form_hexa_Cap:
@@ -388,6 +391,7 @@ ec_vfprintf(FILE *__restrict __stream,
                                 EC_PRINTF_GO_TO_RAW_FORMAT();
                                 continue;
                         };
+                        EC_PRINTF_GO_TO_RAW_FORMAT();
                         continue;
                     }
                     case glibc_printf_form_hexa_Lower:
@@ -417,6 +421,7 @@ ec_vfprintf(FILE *__restrict __stream,
                                 EC_PRINTF_GO_TO_RAW_FORMAT();
                                 continue;
                         };
+                        EC_PRINTF_GO_TO_RAW_FORMAT();
                         continue;
                     }
                     case glibc_printf_form_string_1:

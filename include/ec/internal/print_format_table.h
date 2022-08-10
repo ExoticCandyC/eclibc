@@ -268,8 +268,8 @@ typedef enum
                              /* IPv6: 2001:0db8:85a3:0000:0000:8a2e:0370:7334 */
                              /* Expects the ec_ipv6_t data_type               */
 
-    eclibc_printf_MAC_PC_Version        = 'M', /* 00:00:5e:00:53:af */
-    eclibc_printf_MAC_CISCO             = 'm', /* 0123.4567.89ab    */
+    eclibc_printf_MAC_PC_Version        = 'm', /* 00:00:5e:00:53:af */
+    eclibc_printf_MAC_CISCO             = 'M', /* 0123.4567.89ab    */
                              /* Both mac addresses require the ec_mac_t type  */
 } eclibc_printf_characters;
 
