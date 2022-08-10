@@ -1,4 +1,4 @@
-/* <vprintf_internal.c> -*- C -*- */
+/* <vprintf_safe_internal.c> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -28,59 +28,12 @@
 #include <ec/ftoa.h>
 #include <ec/types.h>
 #include <ec/internal/pad_string.h>
-#include <ec/internal/vprintf_internal.h>
+#include <ec/internal/vprintf_safe_internal.h>
 #include <ec/internal/print_format_table.h>
 
 #ifdef __cplusplus
 extern "C"
 {
-#endif
-
-/* In embedded systems, resource management is WAY more important than
- * speed, so we define the variables localy on embedded systems so that
- * they only take space when printf is called.
- * On higher end systems, 250~500bytes of data is nothing. So, we decalre
- * them globally to eliminate as many instructions as we can from the
- * printf algotithm.
- */
-#if !(defined(XC16) || defined(XC32))
-
-__attribute__ ((visibility("hidden")))
-const char    *__restrict __ec_printf_temp_buffer_tail;
-
-__attribute__ ((visibility("hidden")))
-const char    *__restrict __ec_printf_temp_buffer;
-
-__attribute__ ((visibility("hidden")))
-char    *__restrict __ec_printf_numBuffer_End;
-
-__attribute__ ((visibility("hidden")))
-char    *__restrict __ec_printf_numBuffer;
-
-__attribute__ ((visibility("hidden")))
-int     __ec_printf_leftNumber;
-
-__attribute__ ((visibility("hidden")))
-int     __ec_printf_rightNumber;
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_Number_set;      /* | 1 = right ...... | 2 = left */
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_Number_negative; /* | 1 = right ...... | 2 = left */
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_long_count;      /* 0: half, 1: normal, 2: long, 2 >: ll */
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_show_sign;       /* 1 = Do, 0 = Dont, 2 = Maybe*/
-
-__attribute__ ((visibility("hidden")))
-bool    __ec_printf_side_right;
-
-__attribute__ ((visibility("hidden")))
-struct tm __ec_printf_scratch_memory;
-
 #endif
 
 #define EC_SCRATCH(type) *((type *)(&__ec_printf_scratch_memory))
@@ -160,17 +113,9 @@ struct tm __ec_printf_scratch_memory;
 
 __attribute__((hot,noinline))
 void
-ec_vfprintf(FILE *__restrict __stream,
+ec_vfprintf_safe(FILE *__restrict __stream,
                             const char *__restrict __format, va_list __arg)
 {
-    /* In embedded systems, resource management is WAY more important than
-     * speed, so we define the variables localy on embedded systems so that
-     * they only take space when printf is called.
-     * On higher end systems, 250~500bytes of data is nothing. So, we decalre
-     * them globally to eliminate as many instructions as we can from the
-     * printf algotithm.
-     */
-    #if (defined(XC16) || defined(XC32))
     const char    *__restrict __ec_printf_temp_buffer_tail;
     const char    *__restrict __ec_printf_temp_buffer;
     char    *__restrict __ec_printf_numBuffer_End;
@@ -185,7 +130,6 @@ ec_vfprintf(FILE *__restrict __stream,
              uint8_t __ec_printf_show_sign = 0; /* 1 = Do, 0 = Dont, 2 = Maybe*/
     bool    __ec_printf_side_right = false;
     struct tm __ec_printf_scratch_memory;
-    #endif
 
     /* as much to satisfy a 64 bit binary and more */
     char NumBuffer_Storage[81];
@@ -678,28 +622,28 @@ ec_vfprintf(FILE *__restrict __stream,
 
 __attribute__((hot,noinline))
 void
-ec_fprintf(FILE *__restrict __stream, const char *__restrict __format, ...)
+ec_fprintf_safe(FILE *__restrict __stream, const char *__restrict __format, ...)
 {
     va_list argptr;
     va_start(argptr, __format);
-    ec_vfprintf(__stream, __format, argptr);
+    ec_vfprintf_safe(__stream, __format, argptr);
     va_end(argptr);
 }
 
 __attribute__((hot,noinline))
 void
-ec_vprintf(const char *__restrict __format, va_list __arg)
+ec_vprintf_safe(const char *__restrict __format, va_list __arg)
 {
-    ec_vfprintf(stdout, __format, __arg);
+    ec_vfprintf_safe(stdout, __format, __arg);
 }
 
 __attribute__((hot,noinline))
 void
-ec_printf(const char *__restrict __format, ...)
+ec_printf_safe(const char *__restrict __format, ...)
 {
     va_list argptr;
     va_start(argptr, __format);
-    ec_vfprintf(stdout, __format, argptr);
+    ec_vfprintf_safe(stdout, __format, argptr);
     va_end(argptr);
 }
 

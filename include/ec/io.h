@@ -28,6 +28,7 @@
 #include <stdarg.h>
 #include <ec/vector.h>
 #include <ec/internal/vprintf_internal.h>
+#include <ec/internal/vprintf_safe_internal.h>
 
 #ifdef __cplusplus
 extern "C"

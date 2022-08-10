@@ -25,6 +25,11 @@
 #ifndef ECLIBC_MUTEX_H
 #define ECLIBC_MUTEX_H 1
 
+/* Neither <pthread.h> nor pthread_mutex_t are available on XC16 and XC32
+ * library. So, this header is a blank header for those targets.
+ */
+#if !(defined(XC16) || defined(XC32))
+
 #include <pthread.h>
 
 #include <stddef.h>
@@ -114,6 +119,8 @@ typedef pthread_mutex_t ec_mutex;
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif
