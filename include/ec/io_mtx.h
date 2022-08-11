@@ -25,6 +25,7 @@
 #ifndef ECLIBC_IO_MTX_H
 #define ECLIBC_IO_MTX_H 1
 
+/* This file is the file to add mtx printf functions to the target code */
 #include <ec/internal/vprintf_mtx_internal.h>
 
 #ifdef __cplusplus
