@@ -81,6 +81,8 @@ bool    __ec_printf_side_right;
 __attribute__ ((visibility("hidden")))
 struct tm __ec_printf_scratch_memory;
 
+__attribute__ ((visibility("hidden")))
+__format_type format_type;
 #endif
 
 #define EC_SCRATCH(type) *((type *)(&__ec_printf_scratch_memory))
@@ -185,23 +187,23 @@ ec_vfprintf(FILE *__restrict __stream,
              uint8_t __ec_printf_show_sign = 0; /* 1 = Do, 0 = Dont, 2 = Maybe*/
     bool    __ec_printf_side_right = false;
     struct tm __ec_printf_scratch_memory;
+    __format_type format_type;
     #endif
 
     /* as much to satisfy a 64 bit binary and more */
     char NumBuffer_Storage[81];
-    __format_type format_type = __format_raw;
+
+    __ec_printf_temp_buffer = strstr (__format, "%");
+    if(__ec_printf_temp_buffer == EC_NULL)
+    {
+        fputs(__format, __stream);
+        return;
+    }
+
+    format_type = __format_raw;
     __ec_printf_numBuffer_End = NumBuffer_Storage + 80;
     *__ec_printf_numBuffer_End = '\0';
-    __ec_printf_temp_buffer      = __format;
     __ec_printf_temp_buffer_tail = __format;
-    while(*__ec_printf_temp_buffer != '%')
-    {
-        if(*__ec_printf_temp_buffer++ == '\0')
-        {
-            fputs(__format, __stream);
-            return;
-        }
-    }
     ec_fwrite(__ec_printf_temp_buffer_tail, (__ec_printf_temp_buffer -
                                        __ec_printf_temp_buffer_tail), __stream);
     __ec_printf_temp_buffer_tail = __ec_printf_temp_buffer;

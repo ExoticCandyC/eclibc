@@ -134,18 +134,15 @@ ec_vfprintf_safe(FILE *__restrict __stream,
     /* as much to satisfy a 64 bit binary and more */
     char NumBuffer_Storage[81];
     __format_type format_type = __format_raw;
+    __ec_printf_temp_buffer = strstr (__format, "%");
+    if(__ec_printf_temp_buffer == EC_NULL)
+    {
+        fputs(__format, __stream);
+        return;
+    }
     __ec_printf_numBuffer_End = NumBuffer_Storage + 80;
     *__ec_printf_numBuffer_End = '\0';
-    __ec_printf_temp_buffer      = __format;
     __ec_printf_temp_buffer_tail = __format;
-    while(*__ec_printf_temp_buffer != '%')
-    {
-        if(*__ec_printf_temp_buffer++ == '\0')
-        {
-            fputs(__format, __stream);
-            return;
-        }
-    }
     ec_fwrite(__ec_printf_temp_buffer_tail, (__ec_printf_temp_buffer -
                                        __ec_printf_temp_buffer_tail), __stream);
     __ec_printf_temp_buffer_tail = __ec_printf_temp_buffer;
