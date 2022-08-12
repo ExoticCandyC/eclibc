@@ -1,4 +1,4 @@
-/* <vprintf_safe_internal.h> -*- C -*- */
+/* <time.h> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -22,11 +22,10 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <stdarg.h>
-#include <stdio.h>
+#include <time.h>
 
-#ifndef ECLIBC_INTERNAL_VPRINTF_SAFE_INTERNAL_H
-#define ECLIBC_INTERNAL_VPRINTF_SAFE_INTERNAL_H 1
+#ifndef ECLIBC_TIME_H
+#define ECLIBC_TIME_H 1
 
 #ifdef __cplusplus
 extern "C"
@@ -51,23 +50,23 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
-__attribute__((hot,noinline))
-void
-ec_vfprintf_safe(FILE *__restrict __stream,
-                            const char *__restrict __format, va_list __arg);
+typedef enum
+{
+    ec_January,
+    ec_February,
+    ec_March,
+    ec_April,
+    ec_May,
+    ec_June,
+    ec_July,
+    ec_August,
+    ec_September,
+    ec_October,
+    ec_November,
+    ec_December
+} ec_months;
 
-__attribute__((hot,noinline))
-void
-ec_fprintf_safe(FILE *__restrict __stream,
-                                          const char *__restrict __format, ...);
-
-__attribute__((hot,noinline))
-void
-ec_vprintf_safe(const char *__restrict __format, va_list __arg);
-
-__attribute__((hot,noinline))
-void
-ec_printf_safe(const char *__restrict __format, ...);
+extern const char *ec_month_name_str[];
 
 #ifdef __cplusplus
 }

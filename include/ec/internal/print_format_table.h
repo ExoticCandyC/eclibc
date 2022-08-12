@@ -236,7 +236,7 @@ typedef enum
                             /* Different number bases */
     eclibc_printf_base_2                = 'b', /* ALWAYS a multiple of 8      */
     eclibc_printf_base_8                = 'o', /* can be any number of digits */
-    eclibc_printf_base_16               = 'h', /* ALWAYS a multuple of 2      */
+    eclibc_printf_base_16               = 'H', /* ALWAYS a multuple of 2      */
     /* ^ can be used to capitalize hex values                                 */
     /* adding + to the format will turn the value unsigned                    */
     /* all the sizings are regardless of the CPU architecture                 */
@@ -256,7 +256,6 @@ typedef enum
 
 
                                /* Network formats */
-    /* To Add: IMEI */
     eclibc_printf_phone_number          = 'P',               /* +XXYYYZZZZZZZ */
     /* prints a phone number, the international form, using ec_phonenumber_t  */
     /* The same as %+llu but with the adition of % to make sure it's always   */
@@ -269,7 +268,9 @@ typedef enum
                              /* Expects the ec_ipv6_t data_type               */
 
     eclibc_printf_MAC_PC_Version        = 'm', /* 00:00:5e:00:53:af */
-    eclibc_printf_MAC_CISCO             = 'M', /* 0123.4567.89ab    */
+    eclibc_printf_MAC_PC_Version_caps   = 'M', /* 00:00:5E:00:53:AF */
+    eclibc_printf_MAC_CISCO             = 'c', /* 0123.4567.89ab    */
+    eclibc_printf_MAC_CISCO_caps        = 'C'  /* 0123.4567.89ab    */
                              /* Both mac addresses require the ec_mac_t type  */
 } eclibc_printf_characters;
 

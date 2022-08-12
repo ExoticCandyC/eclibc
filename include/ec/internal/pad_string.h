@@ -65,13 +65,12 @@ ec_fpad_string(FILE * stream, int padSize, char padChar,
 {
     int rpad = padSize - (int)(start - end);
     char *__restrict lpad = end - padSize;
-
 #if !(defined(XC16) || defined(XC32))
     while(lpad++ < start)
         ec_fputc(padChar, stream);
     /*while(start < end)
         ec_fputc(*start++, stream);*/
-    ec_fputs(start, stream);
+    ec_fwrite_str(start, end, stream);
     while(rpad++ < 0)
         ec_fputc(padChar, stream);
 #else
@@ -81,6 +80,45 @@ ec_fpad_string(FILE * stream, int padSize, char padChar,
         ec_fputc((unsigned char)*start++, stream);*/
     ec_fputs(start, stream);
     while(rpad++ < 0)
+        ec_fputc((unsigned char)padChar, stream);
+#endif
+}
+
+static inline void
+__attribute__ ((unused, always_inline))
+ec_fpad_len_str(FILE * stream, int padSize, char padChar,
+                const char * __restrict str, size_t len)
+{
+#if !(defined(XC16) || defined(XC32))
+    while(padSize-- > (int)len)
+        ec_fputc(padChar, stream);
+    ec_fputs(str, stream);
+    while(padSize++ < (int)((((int)len) * -1) - 1))
+        ec_fputc(padChar, stream);
+#else
+    while(padSize-- > (int)len)
+        ec_fputc((unsigned char)padChar, stream);
+    ec_fputs(str, stream);
+    while(padSize++ < (int)((((int)len) * -1) - 1))
+        ec_fputc((unsigned char)padChar, stream);
+#endif
+}
+
+static inline void
+__attribute__ ((unused, always_inline))
+ec_fpad_character(FILE * stream, int padSize, char padChar, char character)
+{
+#if !(defined(XC16) || defined(XC32))
+    while(padSize-- > 1)
+        ec_fputc(padChar, stream);
+    ec_fputc(character, stream);
+    while(padSize++ < -2)
+        ec_fputc(padChar, stream);
+#else
+    while(padSize-- > 1)
+        ec_fputc((unsigned char)padChar, stream);
+    ec_fputc((unsigned char)character, stream);
+    while(padSize++ < -1)
         ec_fputc((unsigned char)padChar, stream);
 #endif
 }

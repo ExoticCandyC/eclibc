@@ -132,9 +132,9 @@ char ea_utf8_get_byte(ec_utf8_t value, uint8_t index)
 void ea_utf8_decode  (ec_utf8_t value, char *pointer)
 {
     uint8_t index;
-    for(index = 0; index < 4; index++)
+    for(index = 0; index < 5; index++)
     {
-        pointer[index] = ea_utf8_get_byte(value, index);
+        pointer[index] = (char)ea_utf8_get_byte(value, (uint8_t)(index + 1));
         if(pointer[index] == (char)0)
             break;
     }

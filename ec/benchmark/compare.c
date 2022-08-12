@@ -98,16 +98,16 @@ void ec_performance_compare(void (*function1)(void),
         progressBarWidth = 0;
     progressBar = malloc((size_t)(progressBarWidth + 1));
 
-    ec_printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
+    printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
 
     if(iteration < 1000)
     {
         iteration = 1000;
-        ec_printf("Minimum number of iterations is 1000. Changing iterations "
+        printf("Minimum number of iterations is 1000. Changing iterations "
                "count to 1000.\n\n\n\r");
     }
 
-    ec_printf("\tStarting the function comparison algorithm:\n\n\n\r");
+    printf("\tStarting the function comparison algorithm:\n\n\n\r");
 
     time(&function1_start_time);
     gettimeofday(&function1_start, EC_NULL);
@@ -129,7 +129,7 @@ void ec_performance_compare(void (*function1)(void),
     ec_generate_progress_bar(progressBar, 100, progressBarWidth, "-", "#");
     ec_io_printf_instant("\rFunction 1 iteration progress: "
                                 "[%s] 100.0%%", progressBar);
-    ec_printf("\r\nFunction 1 finished iterating.\r\n\n");
+    printf("\r\nFunction 1 finished iterating.\r\n\n");
 
     time(&function2_start_time);
     gettimeofday(&function2_start, EC_NULL);
@@ -151,7 +151,7 @@ void ec_performance_compare(void (*function1)(void),
     ec_generate_progress_bar(progressBar, 100, progressBarWidth, "-", "#");
     ec_io_printf_instant("\rFunction 2 iteration progress: "
                                 "[%s] 100.0%%", progressBar);
-    ec_printf("\r\nFunction 2 finished iterating.\r\n\n");
+    printf("\r\nFunction 2 finished iterating.\r\n\n");
 
     free(progressBar);
 
@@ -165,8 +165,8 @@ void ec_performance_compare(void (*function1)(void),
                          function2_end.tv_usec -
                              function2_start.tv_usec;
 
-    ec_printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
-    ec_printf("Comparison test results:\r\n");
+    printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
+    printf("Comparison test results:\r\n");
 
     #if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||        \
            defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&    \
@@ -174,25 +174,25 @@ void ec_performance_compare(void (*function1)(void),
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wformat"
     #endif
-    ec_printf("\tIterations: %lld\n\r", (iteration * innerItterations));
+    printf("\tIterations: %lld\n\r", (iteration * innerItterations));
     #if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||        \
            defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&    \
            (defined(_WIN32) || defined(__linux__))
     #pragma GCC diagnostic pop
     #endif
 
-    ec_printf("\r\n\tFunction 1:\r\n");
-    ec_printf("\t\tStart:\t%s\r" , ctime(&function1_start_time));
-    ec_printf("\t\tFinish:\t%s\r", ctime(&function1_end_time));
-    ec_printf("\t\tElapsed time: %lu[us]\r\n",
+    printf("\r\n\tFunction 1:\r\n");
+    printf("\t\tStart:\t%s\r" , ctime(&function1_start_time));
+    printf("\t\tFinish:\t%s\r", ctime(&function1_end_time));
+    printf("\t\tElapsed time: %lu[us]\r\n",
                                           (long unsigned int)function1_elapsed);
 
-    ec_printf("\r\n\tFunction 2:\r\n");
-    ec_printf("\t\tStart:\t%s\r" , ctime(&function2_start_time));
-    ec_printf("\t\tFinish:\t%s\r", ctime(&function2_end_time));
-    ec_printf("\t\tElapsed time: %lu[us]\r\n",
+    printf("\r\n\tFunction 2:\r\n");
+    printf("\t\tStart:\t%s\r" , ctime(&function2_start_time));
+    printf("\t\tFinish:\t%s\r", ctime(&function2_end_time));
+    printf("\t\tElapsed time: %lu[us]\r\n",
                                           (long unsigned int)function2_elapsed);
-    ec_printf("\r\n");
+    printf("\r\n");
 
     relative_1_2 =
             ((((double)(function1_elapsed)) / ((double)(function2_elapsed))) *
@@ -202,13 +202,17 @@ void ec_performance_compare(void (*function1)(void),
              ((double)100));
 
 
-    ec_printf("\tFunction %u is %.10f%% faster than Function %u.\r\n\n\n",
+    printf("\tFunction %u is %.10f%% aka %.2fx faster than Function %u.\r\n\n\n",
                           ((relative_1_2 < 100) ? 1 : 2),
-                          ((relative_1_2 < 100) ? relative_2_1 : relative_1_2),
+                          ((relative_1_2 < 100) ? (relative_2_1 - 100) :
+                                                          (relative_1_2 - 100)),
+                          ((relative_1_2 < 100) ?
+                                        ((double)relative_2_1 / 100.F) :
+                                                ((double)relative_1_2 / 100.F)),
                           ((relative_1_2 < 100) ? 2 : 1));
 
     #ifdef __linux__
-    ec_printf("Press any key to continue.\r\n");
+    printf("Press any key to continue.\r\n");
     system("read -r -n 1 -s");
     #endif
 }

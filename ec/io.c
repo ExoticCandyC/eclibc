@@ -260,7 +260,7 @@ void ec_io_flush_stderr()
  */
 void ec_io_vprintf_instant(const char *__restrict format, va_list argptr)
 {
-    ec_vprintf(format, argptr);
+    vprintf(format, argptr);
     fflush(stdout);
 }
 

@@ -28,7 +28,6 @@
 #include <stdarg.h>
 #include <ec/vector.h>
 #include <ec/internal/vprintf_internal.h>
-#include <ec/internal/vprintf_safe_internal.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -57,7 +56,11 @@ extern "C"
 
 #define ec_fputs(_ch, _fp) fputs(_ch, _fp)
 
-#define ec_fwrite(_ptr, _len, _fp)   fwrite(_ptr, 1, (size_t)_len, _fp)
+#define ec_fwrite(_ptr, _len, _fp)                                             \
+        fwrite(_ptr, 1, (size_t)_len, _fp)
+
+#define ec_fwrite_str(_start, _end, _fp)                                       \
+        fwrite(_start, 1, ((size_t)(_end - _start)), _fp)
 
 #ifdef __glibc_unlikely
 /* Macro taken from the glibc headers. Put here to unify the macro accross    *

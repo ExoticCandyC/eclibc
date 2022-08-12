@@ -106,6 +106,7 @@ add_compile_options(-Wconversion)
 add_compile_options(-Wundef)
 add_compile_options(-Wunused-macros)
 add_compile_options(-Wno-strict-aliasing)
+#add_compile_options(-fPIC)
 
 ################################################################################
 # Setting general link options
@@ -123,6 +124,7 @@ add_link_options(-Wconversion)
 add_link_options(-Wundef)
 add_link_options(-Wunused-macros)
 add_link_options(-Wno-strict-aliasing)
+#add_link_options(-fPIC)
 
 ################################################################################
 # Building the package config file
@@ -266,27 +268,43 @@ elseif(${ARGV5} MATCHES eclibc32MinGW32)
 endif()
 
 # XC16 and XC32 dont support these flags, so add them selectively
-# Also O3 is not a feww option on XC16 and XC32, And O1 makes
+# Also O3 is not a free option on XC16 and XC32, And O1 makes
 # smaller code on PIC24 than O2. So we choose O1 for XC16 and
 # O2 for XC32
 if(${ARGV4} MATCHES eclibcXC16)
+
+    target_compile_options(${ARGV4} PRIVATE -c)
+    target_compile_options(${ARGV4} PRIVATE -g)
+    target_compile_options(${ARGV4} PRIVATE -omf=elf)
+    target_compile_options(${ARGV4} PRIVATE -D_ADDED_C_LIB)
+    target_compile_options(${ARGV4} PRIVATE -DXPRJ_default=default)
+    target_compile_options(${ARGV4} PRIVATE -legacy-libc)
+    target_compile_options(${ARGV4} PRIVATE -mlarge-code)
+    target_compile_options(${ARGV4} PRIVATE -mlarge-data)
+    target_compile_options(${ARGV4} PRIVATE -msmart-io=1)
+    target_compile_options(${ARGV4} PRIVATE -msfr-warn=off)
     target_compile_options(${ARGV4} PRIVATE -DXC16)
     target_compile_options(${ARGV4} PRIVATE -O1)
+
+    target_link_options(${ARGV4} PRIVATE -c)
+    target_link_options(${ARGV4} PRIVATE -g)
+    target_link_options(${ARGV4} PRIVATE -omf=elf)
+    target_link_options(${ARGV4} PRIVATE -D_ADDED_C_LIB)
+    target_link_options(${ARGV4} PRIVATE -DXPRJ_default=default)
+    target_link_options(${ARGV4} PRIVATE -legacy-libc)
+    target_link_options(${ARGV4} PRIVATE -mlarge-code)
+    target_link_options(${ARGV4} PRIVATE -mlarge-data)
+    target_link_options(${ARGV4} PRIVATE -msmart-io=1)
+    target_link_options(${ARGV4} PRIVATE -msfr-warn=off)
     target_link_options(${ARGV4} PRIVATE -DXC16)
     target_link_options(${ARGV4} PRIVATE -O1)
-    target_link_options(${ARGV4} PRIVATE -fPIC)
 elseif(${ARGV4} MATCHES eclibcXC32)
     target_compile_options(${ARGV4} PRIVATE -DXC32)
     target_compile_options(${ARGV4} PRIVATE -O2)
     target_link_options(${ARGV4} PRIVATE -DXC32)
     target_link_options(${ARGV4} PRIVATE -O2)
 else()
-    # XC16 fails to link complicated nested switch/cases and inline functions
-    # when -fPIC is on. Since the object file in embedded systems virtually
-    # can not be address independant and the linking is always a static
-    # linking, we can safely ommit this flag for XC16 and XC32 targets.
     target_compile_options(${ARGV4} PRIVATE -fPIC)
-
     target_compile_options(${ARGV4} PRIVATE -Ofast)
     target_compile_options(${ARGV4} PRIVATE -Wduplicated-cond)
     target_compile_options(${ARGV4} PRIVATE -Wduplicated-branches)

@@ -22,661 +22,655 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <time.h>
-#include <ec/io.h>
-#include <ec/itoa.h>
-#include <ec/ftoa.h>
-#include <ec/types.h>
-#include <ec/internal/pad_string.h>
-#include <ec/internal/vprintf_internal.h>
+#include <ec/internal/text_parse/printf_format.h>
+#include <ec/internal/text_parse/itoa.h>
+#include <ec/internal/text_parse/ftoa.h>
 #include <ec/internal/print_format_table.h>
+#include <ec/internal/vprintf_internal.h>
+#include <ec/internal/pad_string.h>
+#include <ec/types.h>
+#include <ec/utf8.h>
+#include <ec/time.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-/* In embedded systems, resource management is WAY more important than
- * speed, so we define the variables localy on embedded systems so that
- * they only take space when printf is called.
- * On higher end systems, 250~500bytes of data is nothing. So, we decalre
- * them globally to eliminate as many instructions as we can from the
- * printf algotithm.
- */
-#if !(defined(XC16) || defined(XC32))
-
-__attribute__ ((visibility("hidden")))
-const char    *__restrict __ec_printf_temp_buffer_tail;
-
-__attribute__ ((visibility("hidden")))
-const char    *__restrict __ec_printf_temp_buffer;
-
-__attribute__ ((visibility("hidden")))
-char    *__restrict __ec_printf_numBuffer_End;
-
-__attribute__ ((visibility("hidden")))
-char    *__restrict __ec_printf_numBuffer;
-
-__attribute__ ((visibility("hidden")))
-int     __ec_printf_leftNumber;
-
-__attribute__ ((visibility("hidden")))
-int     __ec_printf_rightNumber;
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_Number_set;      /* | 1 = right ...... | 2 = left */
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_Number_negative; /* | 1 = right ...... | 2 = left */
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_long_count;      /* 0: half, 1: normal, 2: long, 2 >: ll */
-
-__attribute__ ((visibility("hidden")))
-uint8_t __ec_printf_show_sign;       /* 1 = Do, 0 = Dont, 2 = Maybe*/
-
-__attribute__ ((visibility("hidden")))
-bool    __ec_printf_side_right;
-
-__attribute__ ((visibility("hidden")))
-struct tm __ec_printf_scratch_memory;
-
-__attribute__ ((visibility("hidden")))
-__format_type format_type;
-#endif
-
-#define EC_SCRATCH(type) *((type *)(&__ec_printf_scratch_memory))
-
 #define __ec_printf_int(_type, _base, _upperCase)                              \
     {                                                                          \
-        if(__ec_printf_Number_negative & 1)                                    \
-            __ec_printf_rightNumber = __ec_printf_rightNumber * -1;            \
-        if(__ec_printf_Number_negative & 2)                                    \
-            __ec_printf_leftNumber = __ec_printf_leftNumber * -1;              \
-        if((__ec_printf_Number_set & 2) == 0)                                  \
-            __ec_printf_leftNumber = 0;                                        \
-        if((__ec_printf_Number_set & 1) == 0)                                  \
-            __ec_printf_rightNumber = 0;                                       \
-        __ec_printf_numBuffer = ec_itoa_##_type (EC_SCRATCH(_type),            \
+        __ec_printf_numBuffer = ec_itoa_##_type (EC_SCRATCH_1(_type),          \
                         __ec_printf_numBuffer_End, _base, _upperCase);         \
-        __ec_printf_numBuffer = ec_pad_num_string(__ec_printf_rightNumber,     \
-                            __ec_printf_numBuffer, __ec_printf_numBuffer_End); \
-        ec_fpad_string(__stream, __ec_printf_leftNumber, ' ',                  \
-                         __ec_printf_numBuffer, __ec_printf_numBuffer_End);    \
-    }
-
-#define __ec_printf_double()                                                   \
-    {                                                                          \
-        if(__ec_printf_Number_negative & 1)                                    \
-            __ec_printf_rightNumber = __ec_printf_rightNumber * -1;            \
-        if(__ec_printf_Number_negative & 2)                                    \
-            __ec_printf_leftNumber = __ec_printf_leftNumber * -1;              \
-        if((__ec_printf_Number_set & 2) == 0)                                  \
-            __ec_printf_leftNumber = 0;                                        \
-        if((__ec_printf_Number_set & 1) == 0)                                  \
-            __ec_printf_rightNumber = 6;                                       \
-        __ec_printf_numBuffer = ec_ftoa(EC_SCRATCH(double),                    \
-                                     __ec_printf_numBuffer_End,                \
-                                                    __ec_printf_rightNumber);  \
-        ec_fpad_string(__stream, __ec_printf_leftNumber, ' ',                  \
-                                     __ec_printf_numBuffer,                    \
-                                                __ec_printf_numBuffer_End);    \
+        __ec_printf_numBuffer = ec_pad_num_string(                             \
+                                              __ec_args->NumberRight,          \
+                    __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
+        ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',                   \
+                    __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
     }
 
 #define __ec_printf_string()                                                   \
     {                                                                          \
-        size_t __temp = strlen(EC_SCRATCH(char *));                            \
-        if(__ec_printf_Number_negative & 1)                                    \
-            __ec_printf_rightNumber = __ec_printf_rightNumber * -1;            \
-        if(__ec_printf_Number_negative & 2)                                    \
-            __ec_printf_leftNumber = __ec_printf_leftNumber * -1;              \
-        if((__ec_printf_Number_set & 2) == 0)                                  \
-            __ec_printf_leftNumber = 0;                                        \
-        if((__ec_printf_Number_set & 1) == 0 ||                                \
-                                    (size_t)__ec_printf_rightNumber > __temp)  \
-            __ec_printf_rightNumber = (int)__temp;                             \
-        ec_fpad_string(__stream, __ec_printf_leftNumber, ' ',                  \
-                                                  EC_SCRATCH(char *),          \
-                              (EC_SCRATCH(char *) + __ec_printf_rightNumber)); \
+        size_t __temp = strlen(EC_SCRATCH_1(char *));                          \
+        if(__ec_args->NumberRight == 0 ||                                      \
+                                     (size_t)__ec_args->NumberRight > __temp)  \
+            __ec_args->NumberRight = (int)__temp;                              \
+        ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',                   \
+                                                      EC_SCRATCH_1(char *),    \
+                             (EC_SCRATCH_1(char *) + __ec_args->NumberRight)); \
     }
 
-#define __ec_printf_add_digit(_value)                                          \
+#define __ec_printf_double()                                                   \
     {                                                                          \
-        if(__ec_printf_side_right == true)                                     \
-        {                                                                      \
-            __ec_printf_rightNumber *= 10;                                     \
-            __ec_printf_rightNumber += _value;                                 \
-        }                                                                      \
-        else                                                                   \
-        {                                                                      \
-            __ec_printf_leftNumber  *= 10;                                     \
-            __ec_printf_leftNumber += _value;                                  \
-        }                                                                      \
+        __ec_printf_numBuffer = ec_ftoa(EC_SCRATCH_1(double),                  \
+                                         __ec_printf_numBuffer_End,            \
+                                                     __ec_args->NumberRight);  \
+        ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',                   \
+                                     __ec_printf_numBuffer,                    \
+                                              __ec_printf_numBuffer_End);      \
     }
 
-#define EC_PRINTF_GO_TO_RAW_FORMAT()                                           \
+#define __ec_printf_digits(value, digitsCount)                                 \
     {                                                                          \
-        __ec_printf_temp_buffer_tail = __format + 1;                           \
-        format_type = __format_raw;                                            \
+        __ec_printf_numBuffer = ec_itoa_uint64_t ((uint64_t)value,             \
+                        __ec_printf_numBuffer_End, 10, 0);                     \
+        __ec_printf_numBuffer = ec_pad_num_string(digitsCount,                 \
+                    __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
+        ec_fpad_string(__stream, 0, ' ', __ec_printf_numBuffer,                \
+                                                   __ec_printf_numBuffer_End); \
     }
+
+static inline bool
+__attribute__ ((hot,unused,always_inline))
+__ec_printf_perform(FILE *__restrict __stream,
+                          __ec_printf_args *__restrict __ec_args, va_list __arg)
+{
+    /* as much to satisfy a 64 bit binary and more */
+    char NumBuffer_Storage[81];
+    struct tm __ec_scratch_memory;
+    char * __restrict __ec_printf_numBuffer_End = NumBuffer_Storage + 80;
+    char * __restrict __ec_printf_numBuffer;
+    *__ec_printf_numBuffer_End = '\0';
+    #define EC_SCRATCH_1(type) *((type *)(&__ec_scratch_memory))
+    /*
+    #define EC_SCRATCH_2(type) *((type *)((&__ec_scratch_memory) + 8))
+    */
+    if(__ec_args->is_ec_format == 0)
+    {
+        switch(__ec_args->format_chr)
+        {
+            case glibc_printf_form_float_E:
+            case glibc_printf_form_float_e:
+            case glibc_printf_form_float_F:
+            case glibc_printf_form_float_f:
+            case glibc_printf_form_float_G:
+            case glibc_printf_form_float_g:
+            {
+                if((__ec_args->NumSeen & 2) == 0)
+                    __ec_args->NumberRight = 6;
+                EC_SCRATCH_1(double) = va_arg(__arg, double);
+                __ec_printf_double();
+                return true;
+            }
+
+            case glibc_printf_form_percent:
+                ec_fputc('%', __stream);
+                return true;
+
+            case glibc_printf_form_character:
+            {
+                ec_fpad_character(__stream, __ec_args->NumberLeft, ' ',
+                                                    (char)(va_arg(__arg, int)));
+                return true;
+            }
+
+            case glibc_printf_form_string_1:
+            case glibc_printf_form_string_2:
+            {
+                EC_SCRATCH_1(char *) = va_arg(__arg, char *);
+                __ec_printf_string();
+                return true;
+            }
+
+            case glibc_printf_form_integer_1:
+            case glibc_printf_form_integer_2:
+            {
+                switch(__ec_args->Size)
+                {
+                    case 0:
+                        EC_SCRATCH_1(int8_t) = (int8_t)va_arg(__arg, int);
+                        __ec_printf_int(int8_t, 10, 0);
+                        return true;
+                    case 1:
+                        EC_SCRATCH_1(int16_t)
+                                          = (int16_t)va_arg(__arg, int);
+                        __ec_printf_int(int16_t, 10, 0);
+                        return true;
+                    case 2:
+                        EC_SCRATCH_1(int32_t) = va_arg(__arg, int32_t);
+                        __ec_printf_int(int32_t, 10, 0);
+                        return true;
+                    default:
+                        EC_SCRATCH_1(int64_t) = va_arg(__arg, int64_t);
+                        __ec_printf_int(int64_t, 10, 0);
+                        return true;
+                };
+                return true;
+            }
+
+            case glibc_printf_form_size_t_1:
+            case glibc_printf_form_size_t_2:
+            case glibc_printf_form_pointer:
+            case glibc_printf_mod_ptrdiff_t:
+            {
+                EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                if(EC_SCRATCH_1(int) == 0)
+                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                                                            ' ', "False", 5);
+                else
+                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                                                            ' ', "True", 4);
+                return true;
+            }
+
+            case glibc_printf_form_unsigned:
+            {
+                switch(__ec_args->Size)
+                {
+                    case 0:
+                        EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
+                        __ec_printf_int(uint8_t, 10, 0);
+                        return true;
+                    case 1:
+                        EC_SCRATCH_1(uint16_t)
+                                          = (uint16_t)va_arg(__arg, int);
+                        __ec_printf_int(uint16_t, 10, 0);
+                        return true;
+                    case 2:
+                        EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
+                        __ec_printf_int(uint32_t, 10, 0);
+                        return true;
+                    default:
+                        EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                        __ec_printf_int(uint64_t, 10, 0);
+                        return true;
+                };
+                return true;
+            }
+
+            case glibc_printf_form_octal:
+            {
+                switch(__ec_args->Size)
+                {
+                    case 0:
+                        EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
+                        __ec_printf_int(uint8_t, 8, 0);
+                        return true;
+                    case 1:
+                        EC_SCRATCH_1(uint16_t)
+                                          = (uint16_t)va_arg(__arg, int);
+                        __ec_printf_int(uint16_t, 8, 0);
+                        return true;
+                    case 2:
+                        EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
+                        __ec_printf_int(uint32_t, 8, 0);
+                        return true;
+                    default:
+                        EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                        __ec_printf_int(uint64_t, 8, 0);
+                        return true;
+                };
+                return true;
+            }
+
+            case glibc_printf_form_hexa_Cap:
+            case glibc_printf_form_hexa_Lower:
+            {
+                switch(__ec_args->Size)
+                {
+                    case 0:
+                        EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
+                        __ec_printf_int(uint8_t, 16, (__ec_args->format_chr
+                                        == glibc_printf_form_hexa_Cap) ? 1 : 0);
+                        return true;
+                    case 1:
+                        EC_SCRATCH_1(uint16_t)
+                                          = (uint16_t)va_arg(__arg, int);
+                        __ec_printf_int(uint16_t, 16, (__ec_args->format_chr
+                                        == glibc_printf_form_hexa_Cap) ? 1 : 0);
+                        return true;
+                    case 2:
+                        EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
+                        __ec_printf_int(uint32_t, 16, (__ec_args->format_chr
+                                        == glibc_printf_form_hexa_Cap) ? 1 : 0);
+                        return true;
+                    default:
+                        EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                        __ec_printf_int(uint64_t, 16, (__ec_args->format_chr
+                                        == glibc_printf_form_hexa_Cap) ? 1 : 0);
+                        return true;
+                };
+                return true;
+            }
+
+
+            default:
+                return false;
+        };
+    }
+    else
+    {
+        switch(__ec_args->format_chr)
+        {
+            case glibc_printf_form_percent:
+                ec_fputc('%', __stream);
+                return true;
+
+            case eclibc_printf_bool:
+            {
+                EC_SCRATCH_1(int) = va_arg(__arg, int);
+                if(EC_SCRATCH_1(int) == 0)
+                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                                                            ' ', "False", 5);
+                else
+                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                                                            ' ', "True", 4);
+                return true;
+            }
+
+            case eclibc_printf_utf8:
+            {
+                char UTF8_temp[5];
+                EC_SCRATCH_1(ec_utf8_t) = va_arg(__arg, ec_utf8_t);
+                ea_utf8_decode(EC_SCRATCH_1(ec_utf8_t), UTF8_temp);
+                ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                                                            ' ', UTF8_temp, 1);
+                return true;
+            }
+
+            case eclibc_printf_phone_number:
+            {
+                char tempPhone[20];
+                char *__restrict phoneHead = tempPhone + 19;
+                if(__ec_args->NumberLeft < 1)
+                    __ec_args->NumberLeft = 12;
+                else if(__ec_args->NumberLeft > 19)
+                    __ec_args->NumberLeft = 19;
+                tempPhone[19] = '\0';
+                EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                phoneHead = ec_itoa_uint64_t(EC_SCRATCH_1(uint64_t),
+                                                              phoneHead, 10, 1);
+                if(phoneHead < (tempPhone + 19 - __ec_args->NumberLeft))
+                    phoneHead = (tempPhone + 19 - __ec_args->NumberLeft);
+                ec_fputc('+', __stream);
+                ec_fpad_string(__stream, __ec_args->NumberLeft, '0',
+                                                phoneHead, (tempPhone + 19));
+                return true;
+            }
+
+            case eclibc_printf_IPv4_Address:
+            {
+                char tempIP[17];
+                char *__restrict IP_head = tempIP + 16;
+                if(__ec_args->alternateForm)
+                    (EC_SCRATCH_1(ec_ipv4_t)).IP = va_arg(__arg, uint32_t);
+                else
+                    (EC_SCRATCH_1(ec_ipv4_t))    = va_arg(__arg, ec_ipv4_t);
+                tempIP[16] = '\0';
+                #define __EC_PRINTF_READ_NUM(INDEX)                            \
+                IP_head = ec_itoa_uint8_t(                                     \
+                        (EC_SCRATCH_1(ec_ipv4_t)).display_string.byte##INDEX , \
+                                IP_head, 10, 1);
+                __EC_PRINTF_READ_NUM(4);
+                *--IP_head = '.';
+                __EC_PRINTF_READ_NUM(3);
+                *--IP_head = '.';
+                __EC_PRINTF_READ_NUM(2);
+                *--IP_head = '.';
+                __EC_PRINTF_READ_NUM(1);
+                #undef __EC_PRINTF_READ_NUM
+                ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',
+                                IP_head, tempIP + 16);
+                return true;
+            }
+
+            case eclibc_printf_IPv6_Address:
+            {
+                char tempIP[41];
+                char *__restrict IP_head = tempIP + 40;
+                (EC_SCRATCH_1(ec_ipv6_t)) = va_arg(__arg, ec_ipv6_t);
+                tempIP[40] = '\0';
+                #define __EC_PRINTF_READ_NUM(INDEX)                            \
+                IP_head = ec_itoa_uint16_t(                                    \
+                        (EC_SCRATCH_1(ec_ipv6_t)).display_string.byte##INDEX , \
+                                IP_head, 16, __ec_args->alternateForm);
+                __EC_PRINTF_READ_NUM(8); *--IP_head = ':';
+                __EC_PRINTF_READ_NUM(7); *--IP_head = ':';
+                __EC_PRINTF_READ_NUM(6); *--IP_head = ':';
+                __EC_PRINTF_READ_NUM(5); *--IP_head = ':';
+                __EC_PRINTF_READ_NUM(4); *--IP_head = ':';
+                __EC_PRINTF_READ_NUM(3); *--IP_head = ':';
+                __EC_PRINTF_READ_NUM(2); *--IP_head = ':';
+                __EC_PRINTF_READ_NUM(1);
+                #undef __EC_PRINTF_READ_NUM
+                ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',
+                                IP_head, tempIP + 40);
+                return true;
+            }
+
+            case eclibc_printf_MAC_PC_Version:
+            case eclibc_printf_MAC_PC_Version_caps:
+            {
+                char tempMAC[3];
+                char *__restrict MAC_head;
+                if(__ec_args->alternateForm)
+                    (EC_SCRATCH_1(ec_mac_t)).MAC = va_arg(__arg, uint64_t);
+                else
+                    (EC_SCRATCH_1(ec_mac_t))     = va_arg(__arg, ec_mac_t);
+                tempMAC[2] = '\0';
+                #define __EC_PRINTF_PRINT_NUM(INDEX)                           \
+                MAC_head = tempMAC + 2;                                        \
+                MAC_head = ec_itoa_uint8_t(                                    \
+                        (EC_SCRATCH_1(ec_mac_t)).display_string.byte##INDEX ,  \
+                                MAC_head, 16, ((__ec_args->format_chr ==       \
+                                 eclibc_printf_MAC_PC_Version_caps) ? 1 : 0)); \
+                ec_fpad_string(__stream, 2, ' ', MAC_head, tempMAC + 2);
+
+                __EC_PRINTF_PRINT_NUM(1);
+                ec_fputc(':', __stream);
+                __EC_PRINTF_PRINT_NUM(2);
+                ec_fputc(':', __stream);
+                __EC_PRINTF_PRINT_NUM(3);
+                ec_fputc(':', __stream);
+                __EC_PRINTF_PRINT_NUM(4);
+                ec_fputc(':', __stream);
+                __EC_PRINTF_PRINT_NUM(5);
+                ec_fputc(':', __stream);
+                __EC_PRINTF_PRINT_NUM(6);
+
+                #undef __EC_PRINTF_PRINT_NUM
+                return true;
+            }
+
+            case eclibc_printf_MAC_CISCO:
+            case eclibc_printf_MAC_CISCO_caps:
+            {
+                char tempMAC[4];
+                char *__restrict MAC_head;
+                if(__ec_args->alternateForm)
+                    (EC_SCRATCH_1(ec_mac_t)).MAC = va_arg(__arg, uint64_t);
+                else
+                    (EC_SCRATCH_1(ec_mac_t))     = va_arg(__arg, ec_mac_t);
+                tempMAC[3] = '\0';
+                #define __EC_PRINTF_PRINT_NUM(INDEX)                           \
+                MAC_head = tempMAC + 3;                                        \
+                MAC_head = ec_itoa_uint16_t(                                   \
+                        (EC_SCRATCH_1(ec_mac_t)).cisco_string.byte##INDEX ,    \
+                                MAC_head, 16, ((__ec_args->format_chr ==       \
+                                      eclibc_printf_MAC_CISCO_caps) ? 1 : 0)); \
+                ec_fpad_string(__stream, 3, ' ', MAC_head, tempMAC + 3);
+
+                __EC_PRINTF_PRINT_NUM(1);
+                ec_fputc('.', __stream);
+                __EC_PRINTF_PRINT_NUM(2);
+                ec_fputc('.', __stream);
+                __EC_PRINTF_PRINT_NUM(3);
+
+                #undef __EC_PRINTF_PRINT_NUM
+                return true;
+            }
+
+            case eclibc_printf_base_2:
+            {
+                switch(__ec_args->Size)
+                {
+                    case 0:
+                        EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
+                        __ec_printf_int(uint8_t, 2, 0);
+                        return true;
+                    case 1:
+                        EC_SCRATCH_1(uint16_t)
+                                          = (uint16_t)va_arg(__arg, int);
+                        __ec_printf_int(uint16_t, 2, 0);
+                        return true;
+                    case 2:
+                        EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
+                        __ec_printf_int(uint32_t, 2, 0);
+                        return true;
+                    default:
+                        EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                        __ec_printf_int(uint64_t, 2, 0);
+                        return true;
+                };
+                return true;
+            }
+
+            case eclibc_printf_base_8:
+            {
+                switch(__ec_args->Size)
+                {
+                    case 0:
+                        EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
+                        __ec_printf_int(uint8_t, 8, 0);
+                        return true;
+                    case 1:
+                        EC_SCRATCH_1(uint16_t)
+                                          = (uint16_t)va_arg(__arg, int);
+                        __ec_printf_int(uint16_t, 8, 0);
+                        return true;
+                    case 2:
+                        EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
+                        __ec_printf_int(uint32_t, 8, 0);
+                        return true;
+                    default:
+                        EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                        __ec_printf_int(uint64_t, 8, 0);
+                        return true;
+                };
+                return true;
+            }
+
+            case eclibc_printf_base_16:
+            {
+                switch(__ec_args->Size)
+                {
+                    case 0:
+                        EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
+                        __ec_printf_int(uint8_t, 16,
+                                       (__ec_args->alternateForm == 1) ? 1 : 0);
+                        return true;
+                    case 1:
+                        EC_SCRATCH_1(uint16_t)
+                                          = (uint16_t)va_arg(__arg, int);
+                        __ec_printf_int(uint16_t, 16,
+                                       (__ec_args->alternateForm == 1) ? 1 : 0);
+                        return true;
+                    case 2:
+                        EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
+                        __ec_printf_int(uint32_t, 16,
+                                       (__ec_args->alternateForm == 1) ? 1 : 0);
+                        return true;
+                    default:
+                        EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
+                        __ec_printf_int(uint64_t, 16,
+                                       (__ec_args->alternateForm == 1) ? 1 : 0);
+                        return true;
+                };
+                return true;
+            }
+
+            case eclibc_printf_time_seconds:
+            case eclibc_printf_time_seconds_short:
+            {
+                char mode[4] = "";
+                __ec_scratch_memory = va_arg(__arg, struct tm);
+                if(__ec_args->alternateForm == 1)
+                {
+                    mode[0] = ' ';
+                    mode[2] = 'M';
+                    mode[3] = '\0';
+                    if(__ec_scratch_memory.tm_hour > 12)
+                    {
+                        __ec_scratch_memory.tm_hour -= 12;
+                        mode[1] = 'P';
+                    }
+                    else
+                        mode[1] = 'A';
+                }
+                __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
+                ec_fputc(':', __stream);
+                __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
+                if(__ec_args->format_chr == eclibc_printf_time_seconds)
+                {
+                    ec_fputc(':', __stream);
+                    __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
+                }
+                ec_fputs(mode, __stream);
+                return true;
+            }
+
+            case eclibc_printf_Time_struct_tm:
+            case eclibc_printf_time_struct_tm_short:
+            {
+                char mode[4] = "";
+                uint32_t tempInt = va_arg(__arg, uint32_t);
+                __ec_scratch_memory.tm_hour = (int)(tempInt / 3600);
+                __ec_scratch_memory.tm_min  = (int)((tempInt % 3600) / 60);
+                __ec_scratch_memory.tm_sec  = (int)(tempInt % 60);
+                if(__ec_args->alternateForm == 1)
+                {
+                    mode[0] = ' ';
+                    mode[2] = 'M';
+                    mode[3] = '\0';
+                    if(__ec_scratch_memory.tm_hour > 12)
+                    {
+                        __ec_scratch_memory.tm_hour -= 12;
+                        mode[1] = 'P';
+                    }
+                    else
+                        mode[1] = 'A';
+                }
+                __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
+                ec_fputc(':', __stream);
+                __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
+                if(__ec_args->format_chr == eclibc_printf_Time_struct_tm)
+                {
+                    ec_fputc(':', __stream);
+                    __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
+                }
+                ec_fputs(mode, __stream);
+                return true;
+            }
+
+            case eclibc_printf_date_2digit:
+            case eclibc_printf_date_4digit:
+            {
+                __ec_scratch_memory = va_arg(__arg, struct tm);
+                __ec_scratch_memory.tm_year += 1900;
+                if(__ec_args->alternateForm == 1)
+                {
+                    ec_fputs(ec_month_name_str[
+                                         __ec_scratch_memory.tm_mon], __stream);
+                    ec_fputc(' ', __stream);
+                    __ec_printf_digits(__ec_scratch_memory.tm_mday, 2);
+                    if(__ec_scratch_memory.tm_mday > 3 &&
+                            __ec_scratch_memory.tm_mday <= 20)
+                        ec_fputs("th ", __stream);
+                    else if(__ec_scratch_memory.tm_mday % 10 == 1)
+                        ec_fputs("st ", __stream);
+                    else if(__ec_scratch_memory.tm_mday % 10 == 2)
+                        ec_fputs("nd ", __stream);
+                    else
+                        ec_fputs("th ", __stream);
+                    __ec_printf_digits(__ec_scratch_memory.tm_year,
+                                         ((__ec_args->format_chr ==
+                                               eclibc_printf_date_4digit)
+                                                                      ? 4 : 2));
+                }
+                else
+                {
+                    __ec_printf_digits(__ec_scratch_memory.tm_mday, 2);
+                    ec_fputc('/', __stream);
+                    __ec_printf_digits((__ec_scratch_memory.tm_mon + 1), 2);
+                    ec_fputc('/', __stream);
+                    __ec_printf_digits(__ec_scratch_memory.tm_year,
+                                         ((__ec_args->format_chr ==
+                                               eclibc_printf_date_4digit)
+                                                                      ? 4 : 2));
+                }
+                return true;
+            }
+
+            case eclibc_printf_utc_time:
+            {
+                __ec_scratch_memory = va_arg(__arg, struct tm);
+                __ec_scratch_memory.tm_year += 1900;
+                __ec_printf_digits(__ec_scratch_memory.tm_year, 4);
+                ec_fputc('-', __stream);
+                __ec_printf_digits(__ec_scratch_memory.tm_mon, 2);
+                ec_fputc('-', __stream);
+                __ec_printf_digits(__ec_scratch_memory.tm_mday, 2);
+                ec_fputc('T', __stream);
+                __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
+                ec_fputc(':', __stream);
+                __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
+                ec_fputc(':', __stream);
+                __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
+                ec_fputc('Z', __stream);
+                return true;
+            }
+
+            default:
+                return false;
+        }
+    }
+    #undef EC_SCRATCH_1
+    #undef EC_SCRATCH_2
+    return false;
+}
 
 __attribute__((hot,noinline))
 void
 ec_vfprintf(FILE *__restrict __stream,
-                            const char *__restrict __format, va_list __arg)
+                           const char *__restrict __format, va_list __arg)
 {
-    /* In embedded systems, resource management is WAY more important than
-     * speed, so we define the variables localy on embedded systems so that
-     * they only take space when printf is called.
-     * On higher end systems, 250~500bytes of data is nothing. So, we decalre
-     * them globally to eliminate as many instructions as we can from the
-     * printf algotithm.
-     */
-    #if (defined(XC16) || defined(XC32))
-    const char    *__restrict __ec_printf_temp_buffer_tail;
-    const char    *__restrict __ec_printf_temp_buffer;
-    char    *__restrict __ec_printf_numBuffer_End;
-    char    *__restrict __ec_printf_numBuffer;
-    int     __ec_printf_leftNumber = 0;
-    int     __ec_printf_rightNumber = 0;
-    uint8_t __ec_printf_Number_set = 0;     /* | 1 = right ...... | 2 = left */
-    uint8_t __ec_printf_Number_negative = 0;/* | 1 = right ...... | 2 = left */
-    uint8_t __ec_printf_long_count = 1;     /* 0: half, 1: normal, 2: long,
-                                                                      2 >: ll */
-    __attribute__ ((unused))
-             uint8_t __ec_printf_show_sign = 0; /* 1 = Do, 0 = Dont, 2 = Maybe*/
-    bool    __ec_printf_side_right = false;
-    struct tm __ec_printf_scratch_memory;
-    __format_type format_type;
-    #endif
-
-    /* as much to satisfy a 64 bit binary and more */
-    char NumBuffer_Storage[81];
-
-    __ec_printf_temp_buffer = strstr (__format, "%");
-    if(__ec_printf_temp_buffer == EC_NULL)
+    const char *__restrict __ec_printf_temp_buffer_tail = __format;
+    const char *__restrict __ec_printf_temp_buffer;
+    const char *__restrict __ec_printf_temp_buffer_temp;
+    const char *__restrict __ec_printf_temp_buffer_end =
+                                                    __format + strlen(__format);
+    __ec_printf_args __ec_args;
+    while(*__ec_printf_temp_buffer_tail != '\0')
     {
-        fputs(__format, __stream);
-        return;
-    }
-
-    format_type = __format_raw;
-    __ec_printf_numBuffer_End = NumBuffer_Storage + 80;
-    *__ec_printf_numBuffer_End = '\0';
-    __ec_printf_temp_buffer_tail = __format;
-    ec_fwrite(__ec_printf_temp_buffer_tail, (__ec_printf_temp_buffer -
-                                       __ec_printf_temp_buffer_tail), __stream);
-    __ec_printf_temp_buffer_tail = __ec_printf_temp_buffer;
-    __format = __ec_printf_temp_buffer - 1;
-    while(*++__format != '\0')
-    {
-        if(format_type != __format_raw)
+        #ifdef __EC_VPRINTF_USE_STRCHR
+        __ec_printf_temp_buffer = strchr(__ec_printf_temp_buffer_tail, '%');
+        #else
+        __ec_printf_temp_buffer = memchr(
+                            (const void*)__ec_printf_temp_buffer_tail, (int)'%',
+                                     (size_t)(__ec_printf_temp_buffer_end -
+                                              __ec_printf_temp_buffer_tail) );
+        #endif
+        /* No formatting were found */
+        if(__ec_printf_temp_buffer == EC_NULL ||
+                __ec_printf_temp_buffer_end <= __ec_printf_temp_buffer)
         {
-            switch((*__format))
-            {
-                #define CheckDigit(_char, _digit)                              \
-                case _char:                                                    \
-                    __ec_printf_Number_set =                                   \
-                            (uint8_t)(__ec_printf_Number_set |                 \
-                                    ((__ec_printf_side_right == true)          \
-                                            ? 1 : 2));                         \
-                    __ec_printf_add_digit(_digit);                             \
-                    continue;
-                CheckDigit('0', 0);
-                CheckDigit('1', 1);
-                CheckDigit('2', 2);
-                CheckDigit('3', 3);
-                CheckDigit('4', 4);
-                CheckDigit('5', 5);
-                CheckDigit('6', 6);
-                CheckDigit('7', 7);
-                CheckDigit('8', 8);
-                CheckDigit('9', 9);
-                #undef CheckDigit
-                /* Size modifiers */
-                case glibc_printf_mod_half:
-                    __ec_printf_long_count = 0;
-                    continue;
-                case glibc_printf_mod_long:
-                    __ec_printf_long_count++;
-                    continue;
-                case glibc_printf_mod_longlong_1:
-                case glibc_printf_mod_longlong_2:
-                    __ec_printf_long_count = 3;
-                    continue;
-                case '-':
-                    __ec_printf_Number_negative =
-                            (uint8_t)(__ec_printf_Number_negative |
-                                    ((__ec_printf_side_right == true) ? 1 : 2));
-                    continue;
-                case '.':
-                    __ec_printf_side_right = true;
-                    continue;
-                case '+':
-                    continue;
-            };
+            fputs(__ec_printf_temp_buffer_tail, __stream);
+            return;
         }
-        switch(format_type)
+        else
         {
-            case __format_std:
-            {
-                switch ((*__format))
-                {
-                    /* The ticket to go into ec format mode */
-                    case eclibc_printf_custom_mode:
-                    {
-                        format_type = __format_ecio;
-                        continue;
-                    }
+            ec_fwrite_str(__ec_printf_temp_buffer_tail,
+                                            __ec_printf_temp_buffer, __stream);
+            __ec_printf_temp_buffer_temp =
+                      __ec_printf_extract_format (__ec_printf_temp_buffer,
+                                                             &__ec_args, __arg);
 
-                    /* Raw characters */
-                    case glibc_printf_form_percent:
-                    {
-                        ec_fputc('%', __stream);
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_character:
-                    {
-                        EC_SCRATCH(char) = (char)(va_arg(__arg, int));
-                        ec_fputc(EC_SCRATCH(char), __stream);
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-
-                    /* Format characters */
-                    case glibc_printf_form_integer_1:
-                    case glibc_printf_form_integer_2:
-                    {
-                        switch(__ec_printf_long_count)
-                        {
-                            case 0:
-                                EC_SCRATCH(int8_t) = (int8_t)va_arg(__arg, int);
-                                __ec_printf_int(int8_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 1:
-                                EC_SCRATCH(int16_t)
-                                                  = (int16_t)va_arg(__arg, int);
-                                __ec_printf_int(int16_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 2:
-                                EC_SCRATCH(int32_t) = va_arg(__arg, int32_t);
-                                __ec_printf_int(int32_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            default:
-                                EC_SCRATCH(int64_t) = va_arg(__arg, int64_t);
-                                __ec_printf_int(int64_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                        };
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_unsigned:
-                    {
-                        switch(__ec_printf_long_count)
-                        {
-                            case 0:
-                                EC_SCRATCH(uint8_t) =
-                                                    (uint8_t)va_arg(__arg, int);
-                                __ec_printf_int(uint8_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 1:
-                                EC_SCRATCH(uint16_t)
-                                                 = (uint16_t)va_arg(__arg, int);
-                                __ec_printf_int(uint16_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 2:
-                                EC_SCRATCH(uint32_t) = va_arg(__arg, uint32_t);
-                                __ec_printf_int(uint32_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            default:
-                                EC_SCRATCH(uint64_t) = va_arg(__arg, uint64_t);
-                                __ec_printf_int(uint64_t, 10, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                        };
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_octal:
-                    {
-                        switch(__ec_printf_long_count)
-                        {
-                            case 0:
-                                EC_SCRATCH(uint8_t) =
-                                                    (uint8_t)va_arg(__arg, int);
-                                __ec_printf_int(uint8_t, 8, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 1:
-                                EC_SCRATCH(uint16_t)
-                                                 = (uint16_t)va_arg(__arg, int);
-                                __ec_printf_int(uint16_t, 8, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 2:
-                                EC_SCRATCH(uint32_t) = va_arg(__arg, uint32_t);
-                                __ec_printf_int(uint32_t, 8, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            default:
-                                EC_SCRATCH(uint64_t) = va_arg(__arg, uint64_t);
-                                __ec_printf_int(uint64_t, 8, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                        };
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_hexa_Cap:
-                    {
-                        switch(__ec_printf_long_count)
-                        {
-                            case 0:
-                                EC_SCRATCH(uint8_t) =
-                                                    (uint8_t)va_arg(__arg, int);
-                                __ec_printf_int(uint8_t, 16, 1);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 1:
-                                EC_SCRATCH(uint16_t)
-                                                 = (uint16_t)va_arg(__arg, int);
-                                __ec_printf_int(uint16_t, 16, 1);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 2:
-                                EC_SCRATCH(uint32_t) = va_arg(__arg, uint32_t);
-                                __ec_printf_int(uint32_t, 16, 1);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            default:
-                                EC_SCRATCH(uint64_t) = va_arg(__arg, uint64_t);
-                                __ec_printf_int(uint64_t, 16, 1);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                        };
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_hexa_Lower:
-                    {
-                        switch(__ec_printf_long_count)
-                        {
-                            case 0:
-                                EC_SCRATCH(uint8_t) =
-                                                    (uint8_t)va_arg(__arg, int);
-                                __ec_printf_int(uint8_t, 16, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 1:
-                                EC_SCRATCH(uint16_t)
-                                                 = (uint16_t)va_arg(__arg, int);
-                                __ec_printf_int(uint16_t, 16, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            case 2:
-                                EC_SCRATCH(uint32_t) = va_arg(__arg, uint32_t);
-                                __ec_printf_int(uint32_t, 16, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                            default:
-                                EC_SCRATCH(uint64_t) = va_arg(__arg, uint64_t);
-                                __ec_printf_int(uint64_t, 16, 0);
-                                EC_PRINTF_GO_TO_RAW_FORMAT();
-                                continue;
-                        };
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_string_1:
-                    case glibc_printf_form_string_2:
-                    {
-                        EC_SCRATCH(char *) = va_arg(__arg, char *);
-                        __ec_printf_string();
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_size_t_1:
-                    case glibc_printf_form_size_t_2:
-                    case glibc_printf_form_pointer:
-                    case glibc_printf_mod_ptrdiff_t:
-                    {
-                        EC_SCRATCH(uint64_t) = va_arg(__arg, uint64_t);
-                        __ec_printf_int(uint64_t, 10, 1);
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-                    case glibc_printf_form_float_E:
-                    case glibc_printf_form_float_e:
-                    case glibc_printf_form_float_F:
-                    case glibc_printf_form_float_f:
-                    case glibc_printf_form_float_G:
-                    case glibc_printf_form_float_g:
-                    {
-                        EC_SCRATCH(double) = va_arg(__arg, double);
-                        __ec_printf_double();
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        continue;
-                    }
-
-                    #ifdef EC_API_EXPERIMENTAL_PRINTF_API
-                    /* The dot */
-                    case glibc_printf_precision:
-                        break;
-
-                    /* Signs */
-                    case glibc_printf_form_unknown_plus:
-                        break;
-                    case glibc_printf_form_unknown_minus:
-                        break;
-
-                    /* Digits */
-                    case glibc_printf_form_unknown_0:
-                        break;
-                    case glibc_printf_form_unknown_1:
-                        break;
-                    case glibc_printf_form_unknown_2:
-                        break;
-                    case glibc_printf_form_unknown_3:
-                        break;
-                    case glibc_printf_form_unknown_4:
-                        break;
-                    case glibc_printf_form_unknown_5:
-                        break;
-                    case glibc_printf_form_unknown_6:
-                        break;
-                    case glibc_printf_form_unknown_7:
-                        break;
-                    case glibc_printf_form_unknown_8:
-                        break;
-                    case glibc_printf_form_unknown_9:
-                        break;
-                    #endif
-
-                    /* Unknown section */
-                    case glibc_printf_form_unknown_asteric:
-                    case glibc_printf_form_unknown_star:
-                    case glibc_printf_form_unknown_space:
-                    case glibc_printf_form_unknown_I:
-                    case glibc_printf_form_floathex_Cap:
-                    case glibc_printf_form_float_hex_Lower:
-                    case glibc_printf_form_strerror:
-                    case glibc_printf_mod_intmax_t:
-                    case glibc_printf_form_wcharacter:
-                    case glibc_printf_form_number:
-                    case glibc_printf_free_character_01:
-                    case glibc_printf_free_character_02:
-                    case glibc_printf_free_character_03:
-                    case glibc_printf_free_character_04:
-                    case glibc_printf_free_character_05:
-                    case glibc_printf_free_character_06:
-                    case glibc_printf_free_character_07:
-                    case glibc_printf_free_character_08:
-                    case glibc_printf_free_character_09:
-                    case glibc_printf_free_character_10:
-                    case glibc_printf_free_character_11:
-                    case glibc_printf_free_character_12:
-                    case glibc_printf_free_character_13:
-                    case glibc_printf_free_character_14:
-                    case glibc_printf_free_character_15:
-                    case glibc_printf_free_character_16:
-                    case glibc_printf_free_character_17:
-                    case glibc_printf_free_character_18:
-                    case glibc_printf_free_character_19:
-                    case glibc_printf_free_character_20:
-                    case glibc_printf_free_character_21:
-                    case glibc_printf_free_character_22:
-                    case glibc_printf_free_character_24:
-                    case glibc_printf_free_character_25:
-                    case glibc_printf_free_character_26:
-                    case glibc_printf_free_character_28:
-                    case glibc_printf_free_character_30:
-                    case glibc_printf_free_character_31:
-                    case glibc_printf_free_character_32:
-                    case glibc_printf_free_character_33:
-                    case glibc_printf_free_character_34:
-                    case glibc_printf_free_character_35:
-                    case glibc_printf_free_character_36:
-                    case glibc_printf_free_character_37:
-                    case glibc_printf_free_character_38:
-                    case glibc_printf_free_character_39:
-                    case glibc_printf_free_character_40:
-                    default:
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        break;
-                }
-                break;
-            }
-            case __format_ecio:
-            {
-                switch ((*__format))
-                {
-                    /* Toggle upper case mode */
-                    case eclibc_printf_upper_case:
-                        break;
-
-                    /* Format characters */
-                    case eclibc_printf_time_seconds:
-                        break;
-                    case eclibc_printf_Time_struct_tm:
-                        break;
-                    case eclibc_printf_time_seconds_short:
-                        break;
-                    case eclibc_printf_time_struct_tm_short:
-                        break;
-                    case eclibc_printf_date_2digit:
-                        break;
-                    case eclibc_printf_date_4digit:
-                        break;
-                    case eclibc_printf_utc_time:
-                        break;
-                    case eclibc_printf_base_2:
-                        break;
-                    case eclibc_printf_base_8:
-                        break;
-                    case eclibc_printf_base_16:
-                        break;
-                    case eclibc_printf_bool:
-                        break;
-                    case eclibc_printf_utf8:
-                        break;
-                    case eclibc_printf_phone_number:
-                        break;
-                    case eclibc_printf_IPv4_Address:
-                        break;
-                    case eclibc_printf_IPv6_Address:
-                        break;
-                    case eclibc_printf_MAC_PC_Version:
-                        break;
-                    case eclibc_printf_MAC_CISCO:
-                        break;
-
-                    #ifdef EC_API_EXPERIMENTAL_PRINTF_API
-                    /* The dot */
-                    case eclibc_printf_precision:
-                        break;
-
-                    /* Signs */
-                    case eclibc_printf_form_unknown_plus:
-                        break;
-                    case eclibc_printf_form_unknown_minus:
-                        break;
-
-                    /* Digits */
-                    case eclibc_printf_form_unknown_0:
-                        break;
-                    case eclibc_printf_form_unknown_1:
-                        break;
-                    case eclibc_printf_form_unknown_2:
-                        break;
-                    case eclibc_printf_form_unknown_3:
-                        break;
-                    case eclibc_printf_form_unknown_4:
-                        break;
-                    case eclibc_printf_form_unknown_5:
-                        break;
-                    case eclibc_printf_form_unknown_6:
-                        break;
-                    case eclibc_printf_form_unknown_7:
-                        break;
-                    case eclibc_printf_form_unknown_8:
-                        break;
-                    case eclibc_printf_form_unknown_9:
-                        break;
-                    #endif
-
-                    /* Wrong formating, leaving formating mode */
-                    case eclibc_printf_form_unknown_star:
-                    case eclibc_printf_custom_mode:
-                    case eclibc_printf_form_unknown_space:
-                    case eclibc_printf_form_unknown_asteric:
-                    default:
-                        EC_PRINTF_GO_TO_RAW_FORMAT();
-                        break;
-                };
-                break;
-            }
-            case __format_raw:
-            {
-                if(*__format == '%')
-                {
-                    format_type = __format_std;
-                    __ec_printf_leftNumber = 0;
-                    __ec_printf_rightNumber = 0;
-                    __ec_printf_Number_set = 0;
-                    __ec_printf_side_right = false;
-                    __ec_printf_Number_negative = 0;
-                    __ec_printf_long_count = 1;
-                    if(*(__format + 1) == '+')
-                        __ec_printf_show_sign = 1;
-                    else
-                        __ec_printf_show_sign = 0;
-                    if(__format != __ec_printf_temp_buffer_tail)
-                        ec_fwrite(__ec_printf_temp_buffer_tail, (__format -
-                                       __ec_printf_temp_buffer_tail), __stream);
-                }
-                /*else
-                    ec_fputc(*__format, __stream);*/
-                break;
-            }
-        };
+            if(__ec_printf_perform(__stream, &__ec_args, __arg) == false)
+                ec_fwrite_str(__ec_printf_temp_buffer,
+                                        __ec_printf_temp_buffer_temp, __stream);
+            __ec_printf_temp_buffer_tail = __ec_printf_temp_buffer_temp;
+        }
     }
-    ec_fputs(__ec_printf_temp_buffer_tail, __stream);
 }
-
-#undef EC_SCRATCH
-#undef __ec_printf_int
-#undef __ec_printf_double
-#undef __ec_printf_string
-#undef __ec_printf_add_digit
-#undef EC_PRINTF_GO_TO_RAW_FORMAT
 
 __attribute__((hot,noinline))
 void

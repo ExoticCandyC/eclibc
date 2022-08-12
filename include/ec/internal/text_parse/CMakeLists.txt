@@ -1,0 +1,9 @@
+
+cmake_minimum_required(VERSION 3.16)
+
+EC_API_ADD_HEADER_FILE(printf_format.h)
+EC_API_ADD_HEADER_FILE(itoa.h)
+EC_API_ADD_HEADER_FILE(ftoa.h)
+
+
+EXOTIC_CANDY_SYNC_FILES_WITH_PARENT()

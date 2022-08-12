@@ -25,7 +25,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <ec/itoa.h>
+#include <ec/internal/text_parse/itoa.h>
 
 #ifndef ECLIBC_FTOA_H
 #define ECLIBC_FTOA_H 2

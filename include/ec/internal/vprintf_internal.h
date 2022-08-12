@@ -68,25 +68,6 @@ __attribute__((hot,noinline))
 void
 ec_printf(const char *__restrict __format, ...);
 
-/**
- * @brief ec_print  This function is the fastest solution to print a constant
- *                  text.
- * @param __text
- */
-static inline void
-__attribute__((hot, unused, always_inline))
-ec_print(const char *__restrict __text)
-{
-    fputs(__text, stdout);
-}
-
-static inline void
-__attribute__((hot, unused, always_inline))
-ec_fprint(FILE *__restrict __stream, const char *__restrict __text)
-{
-    fputs(__text, __stream);
-}
-
 #ifdef __cplusplus
 }
 #endif
