@@ -26,7 +26,8 @@
 #include <ec/internal/text_parse/itoa.h>
 #include <ec/internal/text_parse/ftoa.h>
 #include <ec/internal/print_format_table.h>
-#include <ec/internal/vprintf_internal.h>
+#include <ec/internal/vsprintf_internal.h>
+#include <ec/internal/spad_string.h>
 #include <ec/internal/pad_string.h>
 #include <ec/types.h>
 #include <ec/utf8.h>
@@ -38,51 +39,51 @@ extern "C"
 {
 #endif
 
-#define __ec_printf_int(_type, _base, _upperCase)                              \
+#define __ec_sprintf_int(_type, _base, _upperCase)                             \
     {                                                                          \
         __ec_printf_numBuffer = ec_itoa_##_type (EC_SCRATCH_1(_type),          \
                         __ec_printf_numBuffer_End, _base, _upperCase);         \
         __ec_printf_numBuffer = ec_pad_num_string(                             \
                                               __ec_args->NumberRight,          \
                     __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
-        ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',                   \
+        ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',                       \
                     __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
     }
 
-#define __ec_printf_string()                                                   \
+#define __ec_sprintf_string()                                                  \
     {                                                                          \
         size_t __temp = strlen(EC_SCRATCH_1(char *));                          \
         if(__ec_args->NumberRight == 0 ||                                      \
                                      (size_t)__ec_args->NumberRight > __temp)  \
             __ec_args->NumberRight = (int)__temp;                              \
-        ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',                   \
+        ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',                       \
                                                       EC_SCRATCH_1(char *),    \
                              (EC_SCRATCH_1(char *) + __ec_args->NumberRight)); \
     }
 
-#define __ec_printf_double()                                                   \
+#define __ec_sprintf_double()                                                  \
     {                                                                          \
         __ec_printf_numBuffer = ec_ftoa(EC_SCRATCH_1(double),                  \
                                          __ec_printf_numBuffer_End,            \
                                                      __ec_args->NumberRight);  \
-        ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',                   \
+        ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',                       \
                                      __ec_printf_numBuffer,                    \
                                               __ec_printf_numBuffer_End);      \
     }
 
-#define __ec_printf_digits(value, digitsCount)                                 \
+#define __ec_sprintf_digits(value, digitsCount)                                \
     {                                                                          \
         __ec_printf_numBuffer = ec_itoa_uint64_t ((uint64_t)value,             \
                         __ec_printf_numBuffer_End, 10, 0);                     \
         __ec_printf_numBuffer = ec_pad_num_string(digitsCount,                 \
                     __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
-        ec_fpad_string(__stream, 0, ' ', __ec_printf_numBuffer,                \
+        ec_sfpad_string(__s, 0, ' ', __ec_printf_numBuffer,                    \
                                                    __ec_printf_numBuffer_End); \
     }
 
 static inline bool
 __attribute__ ((hot,unused,always_inline))
-__ec_printf_perform(FILE *__restrict __stream,
+__ec_sprintf_perform(char *__restrict __s,
                           __ec_printf_args *__restrict __ec_args, va_list __arg)
 {
     /* as much to satisfy a 64 bit binary and more */
@@ -109,17 +110,17 @@ __ec_printf_perform(FILE *__restrict __stream,
                 if((__ec_args->NumSeen & 2) == 0)
                     __ec_args->NumberRight = 6;
                 EC_SCRATCH_1(double) = va_arg(__arg, double);
-                __ec_printf_double();
+                __ec_sprintf_double();
                 return true;
             }
 
             case glibc_printf_form_percent:
-                ec_fputc('%', __stream);
+                strcat(__s, "%");
                 return true;
 
             case glibc_printf_form_character:
             {
-                ec_fpad_character(__stream, __ec_args->NumberLeft, ' ',
+                ec_spad_character(__s, __ec_args->NumberLeft, ' ',
                                                     (char)(va_arg(__arg, int)));
                 return true;
             }
@@ -127,7 +128,7 @@ __ec_printf_perform(FILE *__restrict __stream,
             case glibc_printf_form_strerror:
             {
                 EC_SCRATCH_1(char *) = strerror(errno);
-                __ec_printf_string();
+                __ec_sprintf_string();
                 return true;
             }
 
@@ -135,7 +136,7 @@ __ec_printf_perform(FILE *__restrict __stream,
             case glibc_printf_form_string_2:
             {
                 EC_SCRATCH_1(char *) = va_arg(__arg, char *);
-                __ec_printf_string();
+                __ec_sprintf_string();
                 return true;
             }
 
@@ -146,20 +147,20 @@ __ec_printf_perform(FILE *__restrict __stream,
                 {
                     case 0:
                         EC_SCRATCH_1(int8_t) = (int8_t)va_arg(__arg, int);
-                        __ec_printf_int(int8_t, 10, 0);
+                        __ec_sprintf_int(int8_t, 10, 0);
                         return true;
                     case 1:
                         EC_SCRATCH_1(int16_t)
                                           = (int16_t)va_arg(__arg, int);
-                        __ec_printf_int(int16_t, 10, 0);
+                        __ec_sprintf_int(int16_t, 10, 0);
                         return true;
                     case 2:
                         EC_SCRATCH_1(int32_t) = va_arg(__arg, int32_t);
-                        __ec_printf_int(int32_t, 10, 0);
+                        __ec_sprintf_int(int32_t, 10, 0);
                         return true;
                     default:
                         EC_SCRATCH_1(int64_t) = va_arg(__arg, int64_t);
-                        __ec_printf_int(int64_t, 10, 0);
+                        __ec_sprintf_int(int64_t, 10, 0);
                         return true;
                 };
                 return true;
@@ -172,10 +173,10 @@ __ec_printf_perform(FILE *__restrict __stream,
             {
                 EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
                 if(EC_SCRATCH_1(int) == 0)
-                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                    ec_spad_len_str(__s, __ec_args->NumberLeft,
                                                             ' ', "False", 5);
                 else
-                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                    ec_spad_len_str(__s, __ec_args->NumberLeft,
                                                             ' ', "True", 4);
                 return true;
             }
@@ -186,20 +187,20 @@ __ec_printf_perform(FILE *__restrict __stream,
                 {
                     case 0:
                         EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
-                        __ec_printf_int(uint8_t, 10, 0);
+                        __ec_sprintf_int(uint8_t, 10, 0);
                         return true;
                     case 1:
                         EC_SCRATCH_1(uint16_t)
                                           = (uint16_t)va_arg(__arg, int);
-                        __ec_printf_int(uint16_t, 10, 0);
+                        __ec_sprintf_int(uint16_t, 10, 0);
                         return true;
                     case 2:
                         EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
-                        __ec_printf_int(uint32_t, 10, 0);
+                        __ec_sprintf_int(uint32_t, 10, 0);
                         return true;
                     default:
                         EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
-                        __ec_printf_int(uint64_t, 10, 0);
+                        __ec_sprintf_int(uint64_t, 10, 0);
                         return true;
                 };
                 return true;
@@ -211,20 +212,20 @@ __ec_printf_perform(FILE *__restrict __stream,
                 {
                     case 0:
                         EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
-                        __ec_printf_int(uint8_t, 8, 0);
+                        __ec_sprintf_int(uint8_t, 8, 0);
                         return true;
                     case 1:
                         EC_SCRATCH_1(uint16_t)
                                           = (uint16_t)va_arg(__arg, int);
-                        __ec_printf_int(uint16_t, 8, 0);
+                        __ec_sprintf_int(uint16_t, 8, 0);
                         return true;
                     case 2:
                         EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
-                        __ec_printf_int(uint32_t, 8, 0);
+                        __ec_sprintf_int(uint32_t, 8, 0);
                         return true;
                     default:
                         EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
-                        __ec_printf_int(uint64_t, 8, 0);
+                        __ec_sprintf_int(uint64_t, 8, 0);
                         return true;
                 };
                 return true;
@@ -237,23 +238,23 @@ __ec_printf_perform(FILE *__restrict __stream,
                 {
                     case 0:
                         EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
-                        __ec_printf_int(uint8_t, 16, (__ec_args->format_chr
+                        __ec_sprintf_int(uint8_t, 16, (__ec_args->format_chr
                                         == glibc_printf_form_hexa_Cap) ? 1 : 0);
                         return true;
                     case 1:
                         EC_SCRATCH_1(uint16_t)
                                           = (uint16_t)va_arg(__arg, int);
-                        __ec_printf_int(uint16_t, 16, (__ec_args->format_chr
+                        __ec_sprintf_int(uint16_t, 16, (__ec_args->format_chr
                                         == glibc_printf_form_hexa_Cap) ? 1 : 0);
                         return true;
                     case 2:
                         EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
-                        __ec_printf_int(uint32_t, 16, (__ec_args->format_chr
+                        __ec_sprintf_int(uint32_t, 16, (__ec_args->format_chr
                                         == glibc_printf_form_hexa_Cap) ? 1 : 0);
                         return true;
                     default:
                         EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
-                        __ec_printf_int(uint64_t, 16, (__ec_args->format_chr
+                        __ec_sprintf_int(uint64_t, 16, (__ec_args->format_chr
                                         == glibc_printf_form_hexa_Cap) ? 1 : 0);
                         return true;
                 };
@@ -270,17 +271,17 @@ __ec_printf_perform(FILE *__restrict __stream,
         switch(__ec_args->format_chr)
         {
             case glibc_printf_form_percent:
-                ec_fputc('%', __stream);
+                strcat(__s, "%");
                 return true;
 
             case eclibc_printf_bool:
             {
                 EC_SCRATCH_1(int) = va_arg(__arg, int);
                 if(EC_SCRATCH_1(int) == 0)
-                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                    ec_spad_len_str(__s, __ec_args->NumberLeft,
                                                             ' ', "False", 5);
                 else
-                    ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                    ec_spad_len_str(__s, __ec_args->NumberLeft,
                                                             ' ', "True", 4);
                 return true;
             }
@@ -290,7 +291,7 @@ __ec_printf_perform(FILE *__restrict __stream,
                 char UTF8_temp[5];
                 EC_SCRATCH_1(ec_utf8_t) = va_arg(__arg, ec_utf8_t);
                 ea_utf8_decode(EC_SCRATCH_1(ec_utf8_t), UTF8_temp);
-                ec_fpad_len_str(__stream, __ec_args->NumberLeft,
+                ec_spad_len_str(__s, __ec_args->NumberLeft,
                                                             ' ', UTF8_temp, 1);
                 return true;
             }
@@ -309,8 +310,8 @@ __ec_printf_perform(FILE *__restrict __stream,
                                                               phoneHead, 10, 1);
                 if(phoneHead < (tempPhone + 19 - __ec_args->NumberLeft))
                     phoneHead = (tempPhone + 19 - __ec_args->NumberLeft);
-                ec_fputc('+', __stream);
-                ec_fpad_string(__stream, __ec_args->NumberLeft, '0',
+                strcat(__s, "+");
+                ec_sfpad_string(__s, __ec_args->NumberLeft, '0',
                                                 phoneHead, (tempPhone + 19));
                 return true;
             }
@@ -336,7 +337,7 @@ __ec_printf_perform(FILE *__restrict __stream,
                 *--IP_head = '.';
                 __EC_PRINTF_READ_NUM(1);
                 #undef __EC_PRINTF_READ_NUM
-                ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',
+                ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',
                                 IP_head, tempIP + 16);
                 return true;
             }
@@ -360,7 +361,7 @@ __ec_printf_perform(FILE *__restrict __stream,
                 __EC_PRINTF_READ_NUM(2); *--IP_head = ':';
                 __EC_PRINTF_READ_NUM(1);
                 #undef __EC_PRINTF_READ_NUM
-                ec_fpad_string(__stream, __ec_args->NumberLeft, ' ',
+                ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',
                                 IP_head, tempIP + 40);
                 return true;
             }
@@ -381,18 +382,18 @@ __ec_printf_perform(FILE *__restrict __stream,
                         (EC_SCRATCH_1(ec_mac_t)).display_string.byte##INDEX ,  \
                                 MAC_head, 16, ((__ec_args->format_chr ==       \
                                  eclibc_printf_MAC_PC_Version_caps) ? 1 : 0)); \
-                ec_fpad_string(__stream, 2, ' ', MAC_head, tempMAC + 2);
+                ec_sfpad_string(__s, 2, ' ', MAC_head, tempMAC + 2);
 
                 __EC_PRINTF_PRINT_NUM(1);
-                ec_fputc(':', __stream);
+                strcat(__s, ":");
                 __EC_PRINTF_PRINT_NUM(2);
-                ec_fputc(':', __stream);
+                strcat(__s, ":");
                 __EC_PRINTF_PRINT_NUM(3);
-                ec_fputc(':', __stream);
+                strcat(__s, ":");
                 __EC_PRINTF_PRINT_NUM(4);
-                ec_fputc(':', __stream);
+                strcat(__s, ":");
                 __EC_PRINTF_PRINT_NUM(5);
-                ec_fputc(':', __stream);
+                strcat(__s, ":");
                 __EC_PRINTF_PRINT_NUM(6);
 
                 #undef __EC_PRINTF_PRINT_NUM
@@ -415,12 +416,12 @@ __ec_printf_perform(FILE *__restrict __stream,
                         (EC_SCRATCH_1(ec_mac_t)).cisco_string.byte##INDEX ,    \
                                 MAC_head, 16, ((__ec_args->format_chr ==       \
                                       eclibc_printf_MAC_CISCO_caps) ? 1 : 0)); \
-                ec_fpad_string(__stream, 3, ' ', MAC_head, tempMAC + 3);
+                ec_sfpad_string(__s, 3, ' ', MAC_head, tempMAC + 3);
 
                 __EC_PRINTF_PRINT_NUM(1);
-                ec_fputc('.', __stream);
+                strcat(__s, ".");
                 __EC_PRINTF_PRINT_NUM(2);
-                ec_fputc('.', __stream);
+                strcat(__s, ".");
                 __EC_PRINTF_PRINT_NUM(3);
 
                 #undef __EC_PRINTF_PRINT_NUM
@@ -433,20 +434,20 @@ __ec_printf_perform(FILE *__restrict __stream,
                 {
                     case 0:
                         EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
-                        __ec_printf_int(uint8_t, 2, 0);
+                        __ec_sprintf_int(uint8_t, 2, 0);
                         return true;
                     case 1:
                         EC_SCRATCH_1(uint16_t)
                                           = (uint16_t)va_arg(__arg, int);
-                        __ec_printf_int(uint16_t, 2, 0);
+                        __ec_sprintf_int(uint16_t, 2, 0);
                         return true;
                     case 2:
                         EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
-                        __ec_printf_int(uint32_t, 2, 0);
+                        __ec_sprintf_int(uint32_t, 2, 0);
                         return true;
                     default:
                         EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
-                        __ec_printf_int(uint64_t, 2, 0);
+                        __ec_sprintf_int(uint64_t, 2, 0);
                         return true;
                 };
                 return true;
@@ -458,20 +459,20 @@ __ec_printf_perform(FILE *__restrict __stream,
                 {
                     case 0:
                         EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
-                        __ec_printf_int(uint8_t, 8, 0);
+                        __ec_sprintf_int(uint8_t, 8, 0);
                         return true;
                     case 1:
                         EC_SCRATCH_1(uint16_t)
                                           = (uint16_t)va_arg(__arg, int);
-                        __ec_printf_int(uint16_t, 8, 0);
+                        __ec_sprintf_int(uint16_t, 8, 0);
                         return true;
                     case 2:
                         EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
-                        __ec_printf_int(uint32_t, 8, 0);
+                        __ec_sprintf_int(uint32_t, 8, 0);
                         return true;
                     default:
                         EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
-                        __ec_printf_int(uint64_t, 8, 0);
+                        __ec_sprintf_int(uint64_t, 8, 0);
                         return true;
                 };
                 return true;
@@ -483,23 +484,23 @@ __ec_printf_perform(FILE *__restrict __stream,
                 {
                     case 0:
                         EC_SCRATCH_1(uint8_t) = (uint8_t)va_arg(__arg, int);
-                        __ec_printf_int(uint8_t, 16,
+                        __ec_sprintf_int(uint8_t, 16,
                                        (__ec_args->alternateForm == 1) ? 1 : 0);
                         return true;
                     case 1:
                         EC_SCRATCH_1(uint16_t)
                                           = (uint16_t)va_arg(__arg, int);
-                        __ec_printf_int(uint16_t, 16,
+                        __ec_sprintf_int(uint16_t, 16,
                                        (__ec_args->alternateForm == 1) ? 1 : 0);
                         return true;
                     case 2:
                         EC_SCRATCH_1(uint32_t) = va_arg(__arg, uint32_t);
-                        __ec_printf_int(uint32_t, 16,
+                        __ec_sprintf_int(uint32_t, 16,
                                        (__ec_args->alternateForm == 1) ? 1 : 0);
                         return true;
                     default:
                         EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
-                        __ec_printf_int(uint64_t, 16,
+                        __ec_sprintf_int(uint64_t, 16,
                                        (__ec_args->alternateForm == 1) ? 1 : 0);
                         return true;
                 };
@@ -524,15 +525,15 @@ __ec_printf_perform(FILE *__restrict __stream,
                     else
                         mode[1] = 'A';
                 }
-                __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
-                ec_fputc(':', __stream);
-                __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
+                __ec_sprintf_digits(__ec_scratch_memory.tm_hour, 2);
+                strcat(__s, ":");
+                __ec_sprintf_digits(__ec_scratch_memory.tm_min, 2);
                 if(__ec_args->format_chr == eclibc_printf_time_seconds)
                 {
-                    ec_fputc(':', __stream);
-                    __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
+                    strcat(__s, ":");
+                    __ec_sprintf_digits(__ec_scratch_memory.tm_sec, 2);
                 }
-                ec_fputs(mode, __stream);
+                strcat(__s, mode);
                 return true;
             }
 
@@ -557,15 +558,15 @@ __ec_printf_perform(FILE *__restrict __stream,
                     else
                         mode[1] = 'A';
                 }
-                __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
-                ec_fputc(':', __stream);
-                __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
+                __ec_sprintf_digits(__ec_scratch_memory.tm_hour, 2);
+                strcat(__s, ":");
+                __ec_sprintf_digits(__ec_scratch_memory.tm_min, 2);
                 if(__ec_args->format_chr == eclibc_printf_Time_struct_tm)
                 {
-                    ec_fputc(':', __stream);
-                    __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
+                    strcat(__s, ":");
+                    __ec_sprintf_digits(__ec_scratch_memory.tm_sec, 2);
                 }
-                ec_fputs(mode, __stream);
+                strcat(__s, mode);
                 return true;
             }
 
@@ -576,31 +577,30 @@ __ec_printf_perform(FILE *__restrict __stream,
                 __ec_scratch_memory.tm_year += 1900;
                 if(__ec_args->alternateForm == 1)
                 {
-                    ec_fputs(ec_month_name_str[
-                                         __ec_scratch_memory.tm_mon], __stream);
-                    ec_fputc(' ', __stream);
-                    __ec_printf_digits(__ec_scratch_memory.tm_mday, 2);
+                    strcat(__s, ec_month_name_str[__ec_scratch_memory.tm_mon]);
+                    strcat(__s, " ");
+                    __ec_sprintf_digits(__ec_scratch_memory.tm_mday, 2);
                     if(__ec_scratch_memory.tm_mday > 3 &&
                             __ec_scratch_memory.tm_mday <= 20)
-                        ec_fputs("th ", __stream);
+                        strcat(__s, "th ");
                     else if(__ec_scratch_memory.tm_mday % 10 == 1)
-                        ec_fputs("st ", __stream);
+                        strcat(__s, "st ");
                     else if(__ec_scratch_memory.tm_mday % 10 == 2)
-                        ec_fputs("nd ", __stream);
+                        strcat(__s, "nd ");
                     else
-                        ec_fputs("th ", __stream);
-                    __ec_printf_digits(__ec_scratch_memory.tm_year,
+                        strcat(__s, "th ");
+                    __ec_sprintf_digits(__ec_scratch_memory.tm_year,
                                          ((__ec_args->format_chr ==
                                                eclibc_printf_date_4digit)
                                                                       ? 4 : 2));
                 }
                 else
                 {
-                    __ec_printf_digits(__ec_scratch_memory.tm_mday, 2);
-                    ec_fputc('/', __stream);
-                    __ec_printf_digits((__ec_scratch_memory.tm_mon + 1), 2);
-                    ec_fputc('/', __stream);
-                    __ec_printf_digits(__ec_scratch_memory.tm_year,
+                    __ec_sprintf_digits(__ec_scratch_memory.tm_mday, 2);
+                    strcat(__s, "/");
+                    __ec_sprintf_digits((__ec_scratch_memory.tm_mon + 1), 2);
+                    strcat(__s, "/");
+                    __ec_sprintf_digits(__ec_scratch_memory.tm_year,
                                          ((__ec_args->format_chr ==
                                                eclibc_printf_date_4digit)
                                                                       ? 4 : 2));
@@ -612,18 +612,18 @@ __ec_printf_perform(FILE *__restrict __stream,
             {
                 __ec_scratch_memory = va_arg(__arg, struct tm);
                 __ec_scratch_memory.tm_year += 1900;
-                __ec_printf_digits(__ec_scratch_memory.tm_year, 4);
-                ec_fputc('-', __stream);
-                __ec_printf_digits(__ec_scratch_memory.tm_mon, 2);
-                ec_fputc('-', __stream);
-                __ec_printf_digits(__ec_scratch_memory.tm_mday, 2);
-                ec_fputc('T', __stream);
-                __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
-                ec_fputc(':', __stream);
-                __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
-                ec_fputc(':', __stream);
-                __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
-                ec_fputc('Z', __stream);
+                __ec_sprintf_digits(__ec_scratch_memory.tm_year, 4);
+                strcat(__s, "-");
+                __ec_sprintf_digits(__ec_scratch_memory.tm_mon, 2);
+                strcat(__s, "-");
+                __ec_sprintf_digits(__ec_scratch_memory.tm_mday, 2);
+                strcat(__s, "T");
+                __ec_sprintf_digits(__ec_scratch_memory.tm_hour, 2);
+                strcat(__s, ":");
+                __ec_sprintf_digits(__ec_scratch_memory.tm_min, 2);
+                strcat(__s, ":");
+                __ec_sprintf_digits(__ec_scratch_memory.tm_sec, 2);
+                strcat(__s, "Z");
                 return true;
             }
 
@@ -637,16 +637,17 @@ __ec_printf_perform(FILE *__restrict __stream,
 }
 
 __attribute__((hot,noinline))
-void
-ec_vfprintf(FILE *__restrict __stream,
-                           const char *__restrict __format, va_list __arg)
+int
+ec_vsprintf(char *__restrict __dst, const char *__restrict __src,
+                                                                 va_list __arg)
 {
-    const char *__restrict __ec_printf_temp_buffer_tail = __format;
+    const char *__restrict __ec_printf_temp_buffer_tail = __src;
     const char *__restrict __ec_printf_temp_buffer;
-    const char *__restrict __ec_printf_temp_buffer_temp;
+    __attribute__((unused)) const char *__restrict __ec_printf_temp_buffer_temp;
     const char *__restrict __ec_printf_temp_buffer_end =
-                                                    __format + strlen(__format);
+                                                    __src + strlen(__src);
     __ec_printf_args __ec_args;
+    __dst[0] = '\0';
     while(*__ec_printf_temp_buffer_tail != '\0')
     {
         #ifdef __EC_VPRINTF_USE_STRCHR
@@ -661,64 +662,38 @@ ec_vfprintf(FILE *__restrict __stream,
         if(__ec_printf_temp_buffer == EC_NULL ||
                 __ec_printf_temp_buffer_end <= __ec_printf_temp_buffer)
         {
-            fputs(__ec_printf_temp_buffer_tail, __stream);
-            return;
+            strcat(__dst, __ec_printf_temp_buffer_tail);
+            return ((int)(strlen(__dst)));
         }
         else
         {
-            ec_fwrite_str(__ec_printf_temp_buffer_tail,
-                                            __ec_printf_temp_buffer, __stream);
+            strncat (__dst, __ec_printf_temp_buffer_tail, (size_t)
+                      (__ec_printf_temp_buffer - __ec_printf_temp_buffer_tail));
+
             __ec_printf_temp_buffer_temp =
                       __ec_printf_extract_format (__ec_printf_temp_buffer,
                                                              &__ec_args, __arg);
 
-            if(__ec_printf_perform(__stream, &__ec_args, __arg) == false)
-                ec_fwrite_str(__ec_printf_temp_buffer,
-                                        __ec_printf_temp_buffer_temp, __stream);
+            if(__ec_sprintf_perform(__dst, &__ec_args, __arg) == false)
+                strncat (__dst, __ec_printf_temp_buffer, (size_t)
+                      (__ec_printf_temp_buffer_temp - __ec_printf_temp_buffer));
+
             __ec_printf_temp_buffer_tail = __ec_printf_temp_buffer_temp;
         }
     }
-}
-/*
-__attribute__((hot,noinline))
-void
-ec_fprintf(FILE *__restrict __stream, const char *__restrict __format)
-{
-    fputs(__format, __stream);
-}
-*/
-__attribute__((hot,noinline))
-void
-ec_fprintf(FILE *__restrict __stream, const char *__restrict __format, ...)
-{
-    va_list argptr;
-    va_start(argptr, __format);
-    ec_vfprintf(__stream, __format, argptr);
-    va_end(argptr);
+    return ((int)(strlen(__dst)));
 }
 
 __attribute__((hot,noinline))
-void
-ec_vprintf(const char *__restrict __format, va_list __arg)
+int
+ec_sprintf(char *__restrict __dst, const char *__restrict __src, ...)
 {
-    ec_vfprintf(stdout, __format, __arg);
-}
-/*
-__attribute__((hot,noinline))
-void
-ec_printf(const char *__restrict __format)
-{
-    fputs(__format, stdout);
-}
-*/
-__attribute__((hot,noinline))
-void
-ec_printf(const char *__restrict __format, ...)
-{
+    int result;
     va_list argptr;
-    va_start(argptr, __format);
-    ec_vfprintf(stdout, __format, argptr);
+    va_start(argptr, __src);
+    result = ec_vsprintf(__dst, __src, argptr);
     va_end(argptr);
+    return result;
 }
 
 #ifdef __cplusplus

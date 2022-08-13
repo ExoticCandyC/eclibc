@@ -123,13 +123,13 @@ typedef enum
     /* for 'p' , aka pointer   = 8 bytes */
     glibc_printf_mod_ptrdiff_t          = 't',
     /* for 't' , aka pointer dif = 8 bytes */
+    glibc_printf_form_strerror          = 'm',
+    /* for 'm' , ="%s", strerror (errno) */
 
     glibc_printf_form_floathex_Cap      = 'A',               /* NOT SUPPORTED */
     /* for 'A' , aka double hex form     */                  /* NOT SUPPORTED */
     glibc_printf_form_float_hex_Lower   = 'a',               /* NOT SUPPORTED */
     /* for 'a' , aka double hex form     */                  /* NOT SUPPORTED */
-    glibc_printf_form_strerror          = 'm',               /* NOT SUPPORTED */
-    /* for 'm' , ="%s", strerror (errno) */                  /* NOT SUPPORTED */
     glibc_printf_mod_intmax_t           = 'j',               /* NOT SUPPORTED */
     /* for 'j' , int max, */                                 /* NOT SUPPORTED */
     glibc_printf_form_wcharacter        = 'C',               /* NOT SUPPORTED */

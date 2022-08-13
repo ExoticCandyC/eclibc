@@ -1,4 +1,4 @@
-/* <vprintf_internal.h> -*- C -*- */
+/* <vsprintf_internal.h> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -22,14 +22,14 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
-
 #include <ec/preprocessor.h>
-#include <ec/internal/printf_fix_optimizer.h>
+#include <ec/internal/sprintf_fix_optimizer.h>
 
-#ifndef ECLIBC_INTERNAL_VPRINTF_INTERNAL_H
-#define ECLIBC_INTERNAL_VPRINTF_INTERNAL_H 1
+#ifndef ECLIBC_INTERNAL_VSPRINTF_INTERNAL_H
+#define ECLIBC_INTERNAL_VSPRINTF_INTERNAL_H 1
 
 #ifdef __cplusplus
 extern "C"
@@ -54,52 +54,23 @@ extern "C"
 #define EC_NULL NULL
 #endif
 
-#define __ec_printf_impl(n, ...) __ec_printf_func__ ## n(__VA_ARGS__)
-#define __ec_printf(n, ...) __ec_printf_impl(n, __VA_ARGS__)
-#define ec_printf(...) __ec_printf(__EC_VA_NARGS__(__VA_ARGS__), __VA_ARGS__)
+#define __ec_sprintf_impl(n, ...) __ec_sprintf_func__ ## n(__VA_ARGS__)
+#define __ec_sprintf(n, ...) __ec_sprintf_impl(n, __VA_ARGS__)
+#define ec_sprintf(...) __ec_sprintf(__EC_VA_NARGS__(__VA_ARGS__), __VA_ARGS__)
 
-#define __ec_fprintf_impl(n, ...) __ec_fprintf_func__ ## n(__VA_ARGS__)
-#define __ec_fprintf(n, ...) __ec_fprintf_impl(n, __VA_ARGS__)
-#define ec_fprintf(...) __ec_fprintf(__EC_VA_NARGS__(__VA_ARGS__), __VA_ARGS__)
-
-#define ec_vfprintf(__stream, __format, __arg)                                 \
-      __ec_vfprintf(__stream, __format, __arg)
-
-#define ec_vprintf(__format, __arg)                                            \
-      __ec_vprintf(__format, __arg)
+#define ec_vsprintf(__s, __format, __arg)                                      \
+      __ec_vsprintf(__s, __format, __arg)
 
 __attribute__((hot,noinline))
-void
-ec_vfprintf(FILE *__restrict __stream,
-                            const char *__restrict __format, va_list __arg);
+int
+ec_vsprintf(char *__restrict __dst, const char *__restrict __src,
+                                                                 va_list __arg);
 
-/*
-__attribute__((hot,noinline))
-void
-ec_fprintf(FILE *__restrict __stream, const char *__restrict __format);
-*/
-
-#define __ec_fprintf_func__2(__stream, __format)       fputs(__format, __stream)
+#define __ec_sprintf_func__2(__dst, __src)     (int)strlen(strcpy(__dst, __src))
 
 __attribute__((hot,noinline))
-void
-ec_fprintf(FILE *__restrict __stream, const char *__restrict __format, ...);
-
-__attribute__((hot,noinline))
-void
-ec_vprintf(const char *__restrict __format, va_list __arg);
-
-/*
-__attribute__((hot,noinline))
-void
-ec_printf(const char *__restrict __format);
-*/
-
-#define __ec_printf_func__1(__format)                    fputs(__format, stdout)
-
-__attribute__((hot,noinline))
-void
-ec_printf(const char *__restrict __format, ...);
+int
+ec_sprintf(char *__restrict __dst, const char *__restrict __src, ...);
 
 #ifdef __cplusplus
 }

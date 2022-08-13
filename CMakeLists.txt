@@ -172,7 +172,8 @@ function  ( text )
         list ( APPEND _TEXT_OPTIONS --bold )
     endif ()
 
-    execute_process ( COMMAND ${CMAKE_COMMAND} -E env CLICOLOR_FORCE=1 ${CMAKE_COMMAND} ${_TEXT_OPTIONS} ${_TEXT_UNPARSED_ARGUMENTS}
+    execute_process ( COMMAND ${CMAKE_COMMAND} -E env CLICOLOR_FORCE=1
+        ${CMAKE_COMMAND} ${_TEXT_OPTIONS} ${_TEXT_UNPARSED_ARGUMENTS}
         OUTPUT_VARIABLE _TEXT_RESULT
         ECHO_ERROR_VARIABLE
     )
