@@ -138,6 +138,7 @@ __ec_performance_compare
     int             progressBarWidth;
     char           *progressBar;
     uint32_t        index;
+    uint32_t        min_elapsed_index = 0;
     uint64_t        min_elapsed_value = 0xFFFFFFFFFFFFFFFF;
     ec_printf("\r\neclibc: ec/benchmark/compare.h:\r\n");
     if(__nargs == 1)
@@ -214,7 +215,10 @@ __ec_performance_compare
         ec_printf("%12s%-11s%llu[us]\r\n", "", "Elapsed:",
                                               performance_data[index].elapsed);
         if(performance_data[index].elapsed < min_elapsed_value)
+        {
             min_elapsed_value = performance_data[index].elapsed;
+            min_elapsed_index = index;
+        }
     }
 
     ec_printf(end_line() "Benchmark graph:" end_line());
@@ -228,9 +232,8 @@ __ec_performance_compare
 
     for(index = 0; index < __nargs; index++)
     {
-        double percentile = (1.F - (((double)performance_data[index].elapsed -
-                                     (double)min_elapsed_value) /
-                                     (double)min_elapsed_value)) * 100.F;
+        double percentile = (((double)performance_data[min_elapsed_index].elapsed) /
+                             ((double)performance_data[index].elapsed)) * 100.F;
 
         if(percentile > 95.F)
             ec_printf(color_text_green());
