@@ -24,200 +24,243 @@
 
 #if (defined(__linux__) || defined(_WIN32))
 
-#include <sys/time.h>
-#include <stdlib.h>
-#include <time.h>
 
+#if !(defined(XC16) || defined(XC32))
+#pragma GCC diagnostic ignored "-Wunused-macros"
+#endif
+
+#define _DEFAULT_SOURCE
+#include <ec/string.h>
+#include <ec/time.h>
+#include <sys/time.h>
+#include <ec/ansi.h>
+#include <unistd.h>
 #include <ec/benchmark/compare.h>
-#include <ec/io.h>
-#include <ec/printf.h>
+
+#define __ec_compare_function_name_max_len 20
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-
-/* This module is designed ONLY for PC targets */
-
-/**
- * @brief ec_performance_compare    This function takes two functions, and runs
- *                                  them multiple times. After the iterations
- *                                  are done, it will compare the results of
- *                                  both functions and gives the user a full
- *                                  statistics on the performance of each
- *                                  function, and their performance relative to
- *                                  each other.
- *                                  Please note that the functions should NOT
- *                                  take any arguments and should return no
- *                                  values as well. So, you should make wrapper
- *                                  functions for the functions that dont meet
- *                                  this criteria and then pass the wrapper
- *                                  functions to this function.
- * @param [in]function1             The first function to be used during the
- *                                  test.
- * @param [in]function2             The second function to be used during the
- *                                  test.
- * @param [in]iteration             Number of times each function is executed.
- * @param [in]innerItterations      Number of times each function is being
- *                                  executed by the wrapper. The default value
- *                                  is 0.
- */
-void ec_performance_compare(void (*function1)(void),
-                            void (*function2)(void),
-                            long long int iteration,
-                            long long int innerItterations)
+typedef struct
 {
-    long long int index;
+    time_t   start_time;
+    time_t   end_time;
+    uint64_t elapsed;
+} __ec_function_performance_data;
 
-    struct timeval function1_start;
-    time_t         function1_start_time;
-    struct timeval function2_start;
-    time_t         function2_start_time;
-    struct timeval function1_end;
-    time_t         function1_end_time;
-    struct timeval function2_end;
-    time_t         function2_end_time;
+typedef void (*__ec_function_compare_t)(void);
 
-    time_t         function1_elapsed;
-    time_t         function2_elapsed;
+__attribute__ ((visibility("hidden"),noinline))
+void
+__ec_print_nth_name
+    (const uint32_t __nargs, const char * __restrict __arg_names, uint32_t argn)
+{
+    const char * __restrict Name_Tail = __arg_names;
+    const char * __restrict Name_Head;
+    if(argn < __nargs)
+    {
+        do
+        {
+            Name_Head = strchr(Name_Tail, ',');
+            if(argn == 0)
+            {
+                if(Name_Head == EC_NULL)
+                    ec_fputs(Name_Tail, stdout);
+                else
+                    ec_fwrite_str(Name_Tail, Name_Head - 1, stdout);
+                return;
+            }
+            Name_Tail = Name_Head + 2;
+        } while(argn-- > 0);
+    }
+}
 
-    double         relative_1_2;
-    double         relative_2_1;
+__attribute__ ((visibility("hidden"),noinline))
+void
+__ec_benchmark_progress_bar
+    (int progressBarWidth, char *progressBar, double progress)
+{
+
+    ec_generate_progress_bar(progressBar, progress,
+                                progressBarWidth, "-", "#");
+    ec_io_printf_instant(cursor_home() cursor_move_right_variable()
+              " > Iteration Progress: [%s] %5.1f%%",
+              __ec_compare_function_name_max_len, progressBar, progress);
+}
+
+__attribute__ ((visibility("hidden"),noinline))
+void
+__ec_benchmark_itterate_function
+    (const uint64_t __iterations, __ec_function_compare_t __func,
+     __ec_function_performance_data * __restrict __data, int progressBarWidth,
+     char *progressBar)
+{
+    struct timeval timer_start;
+    struct timeval timer_end;
+    uint64_t       index;
+
+    time(&(__data->start_time));
+    gettimeofday(&timer_start, EC_NULL);
+    for(index = 0; index < __iterations; index++)
+    {
+        if(index % (__iterations / 1000) == 0)
+        {
+            double progress = ((double)index /
+                               ((double)__iterations / (double)100));
+            __ec_benchmark_progress_bar
+                    (progressBarWidth, progressBar, progress);
+        }
+        __func();
+    }
+    gettimeofday(&timer_end, EC_NULL);
+    time(&(__data->end_time));
+
+    __data->elapsed = (uint64_t)
+                       ((timer_end.tv_sec -
+                             timer_start.tv_sec) * 1000000 +
+                         timer_end.tv_usec -
+                             timer_start.tv_usec);
+}
+
+__attribute__((noinline))
+void
+__ec_performance_compare
+    (uint64_t __iterations, const uint64_t __multiplyer,
+     const uint32_t __nargs, const char * __restrict __arg_names, ...)
+{
+    __ec_function_compare_t          __func;
+    __ec_function_performance_data * __restrict performance_data;
+    va_list         argptr;
+    int             terminalColumns;
+    int             progressBarWidth;
+    char           *progressBar;
+    uint32_t        index;
+    uint64_t        min_elapsed_value = 0xFFFFFFFFFFFFFFFF;
+    ec_printf("\r\neclibc: ec/benchmark/compare.h:\r\n");
+    if(__nargs == 1)
+    {
+        ec_printf("Atleast two functions are needed for benchmark "
+                                                              "comparing.\r\n");
+        return;
+    }
+
+    if(__iterations < 1000)
+    {
+        __iterations = 1000;
+        ec_printf("Minimum number of iterations is 1000. Changing iterations "
+                                                      "count to 1000.\r\n");
+    }
+
+    ec_printf("\r\nStarting the function comparison algorithm:\r\n");
+
+    ec_io_printf_instant(cursor_invisible());
 
     #ifdef __linux__
-    int            terminalColumns = ec_io_get_terminal_columns_count();
-    #else
-    int            terminalColumns = 80;
+    terminal_echo_off();
     #endif
-    int            progressBarWidth = (int)(terminalColumns -
-                       (int)sizeof("Function 1 iteration progress: [] 100.0%"));
-    char           *progressBar;
+
+    #ifdef __linux__
+    /* Making sure the terminal has been initiated and stablized */
+    usleep(50000);
+    terminalColumns = ec_io_get_terminal_columns_count() -
+                      __ec_compare_function_name_max_len + 1;
+    #else
+    terminalColumns = 80 - __ec_compare_function_name_max_len;
+    #endif
+
+    progressBarWidth = (int)(terminalColumns -
+                       (int)sizeof(" : Iteration Progress: [] 100.0%"));
 
     if(progressBarWidth < 0)
         progressBarWidth = 0;
-    progressBar = malloc((size_t)(progressBarWidth + 1));
+    progressBar = malloc((size_t)(progressBarWidth + 20));
+    performance_data = malloc(sizeof(__ec_function_performance_data) * __nargs);
 
-    printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
+    va_start(argptr, __arg_names);
 
-    if(iteration < 1000)
+    for(index = 0; index < __nargs; index++)
     {
-        iteration = 1000;
-        printf("Minimum number of iterations is 1000. Changing iterations "
-               "count to 1000.\n\n\n\r");
+        __ec_print_nth_name(__nargs, __arg_names, index);
+        __func = va_arg(argptr, __ec_function_compare_t);
+        __ec_benchmark_itterate_function(__iterations, __func,
+                                         (performance_data + index),
+                                         progressBarWidth, progressBar);
+
+        ec_printf(cursor_home() color_text_green());
+        __ec_print_nth_name(__nargs, __arg_names, index);
+        __ec_benchmark_progress_bar(progressBarWidth, progressBar, 100.F);
+        ec_printf(color_reset() end_line());
     }
 
-    printf("\tStarting the function comparison algorithm:\n\n\n\r");
+    va_end(argptr);
 
-    time(&function1_start_time);
-    gettimeofday(&function1_start, EC_NULL);
-    for(index = 0; index < iteration; index++)
-    {
-        if(index % (iteration / 1000) == 0)
-        {
-            double progress = ((double)index /
-                               ((double)iteration / (double)100));
-            ec_generate_progress_bar(progressBar, progress,
-                                        progressBarWidth, "-", "#");
-            ec_io_printf_instant("\rFunction 1 iteration progress: "
-                                    "[%s] %5.1f%%", progressBar, progress);
-        }
-        function1();
-    }
-    gettimeofday(&function1_end, EC_NULL);
-    time(&function1_end_time);
-    ec_generate_progress_bar(progressBar, 100, progressBarWidth, "-", "#");
-    ec_io_printf_instant("\rFunction 1 iteration progress: "
-                                "[%s] 100.0%%", progressBar);
-    printf("\r\nFunction 1 finished iterating.\r\n\n");
+    ec_printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
+    ec_printf("Comparison test results:\r\n");
 
-    time(&function2_start_time);
-    gettimeofday(&function2_start, EC_NULL);
-    for(index = 0; index < iteration; index++)
+    ec_printf("%4sIterations: %llu\n\r", "", (__iterations * __multiplyer));
+
+    for(index = 0; index < __nargs; index++)
     {
-        if(index % (iteration / 1000) == 0)
-        {
-            double progress = ((double)index /
-                               ((double)iteration / (double)100));
-            ec_generate_progress_bar(progressBar, progress,
-                                        progressBarWidth, "-", "#");
-            ec_io_printf_instant("\rFunction 2 iteration progress: "
-                                    "[%s] %5.1f%%", progressBar, progress);
-        }
-        function2();
+        ec_printf("%8s\"", "");
+        __ec_print_nth_name(__nargs, __arg_names, index);
+        ec_printf("\" statistics:\r\n");
+        ec_printf("%12s%-11s%s\r" , "", "Start:",
+                        ctime(&(performance_data[index].start_time)));
+        ec_printf("%12s%-11s%s\r", "", "Finish:",
+                        ctime(&(performance_data[index].end_time)));
+        ec_printf("%12s%-11s%llu[us]\r\n", "", "Elapsed:",
+                                              performance_data[index].elapsed);
+        if(performance_data[index].elapsed < min_elapsed_value)
+            min_elapsed_value = performance_data[index].elapsed;
     }
-    gettimeofday(&function2_end, EC_NULL);
-    time(&function2_end_time);
-    ec_generate_progress_bar(progressBar, 100, progressBarWidth, "-", "#");
-    ec_io_printf_instant("\rFunction 2 iteration progress: "
-                                "[%s] 100.0%%", progressBar);
-    printf("\r\nFunction 2 finished iterating.\r\n\n");
+
+    ec_printf(end_line() "Benchmark graph:" end_line());
+    ec_printf("%4sSpeed percentile - " color_text_green() "higher"
+                                   color_reset() " is better:" end_line(), "");
+
+    progressBarWidth = (int)(terminalColumns -
+                       (int)sizeof("         > %100.00% []"));
+    if(progressBarWidth < 0)
+        progressBarWidth = 0;
+
+    for(index = 0; index < __nargs; index++)
+    {
+        double percentile = (1.F - (((double)performance_data[index].elapsed -
+                                     (double)min_elapsed_value) /
+                                     (double)min_elapsed_value)) * 100.F;
+
+        if(percentile > 95.F)
+            ec_printf(color_text_green());
+        else if(percentile > 70.F)
+            ec_printf(color_text_cyan());
+        else if(percentile > 50.F)
+            ec_printf(color_text_yellow());
+        else
+            ec_printf(color_text_red());
+
+        ec_generate_progress_bar(progressBar, percentile,
+                                    progressBarWidth, " ", "#");
+        ec_printf("%8s", "");
+        __ec_print_nth_name(__nargs, __arg_names, index);
+        ec_printf(cursor_home() cursor_move_right_variable() " > %6.2f%% [%s]",
+                    (8 + __ec_compare_function_name_max_len),
+                    percentile, progressBar);
+        ec_printf(color_reset() end_line());
+    }
+
 
     free(progressBar);
-
-    function1_elapsed = (function1_end.tv_sec -
-                             function1_start.tv_sec) * 1000000 +
-                         function1_end.tv_usec -
-                             function1_start.tv_usec;
-
-    function2_elapsed = (function2_end.tv_sec -
-                             function2_start.tv_sec) * 1000000 +
-                         function2_end.tv_usec -
-                             function2_start.tv_usec;
-
-    printf("\r\neclibc: ec/benchmark/compare.h:\n\n\r");
-    printf("Comparison test results:\r\n");
-
-    #if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||        \
-           defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&    \
-           (defined(_WIN32) || defined(__linux__))
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wformat"
-    #endif
-    printf("\tIterations: %lld\n\r", (iteration * innerItterations));
-    #if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||        \
-           defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&    \
-           (defined(_WIN32) || defined(__linux__))
-    #pragma GCC diagnostic pop
-    #endif
-
-    printf("\r\n\tFunction 1:\r\n");
-    printf("\t\tStart:\t%s\r" , ctime(&function1_start_time));
-    printf("\t\tFinish:\t%s\r", ctime(&function1_end_time));
-    printf("\t\tElapsed time: %lu[us]\r\n",
-                                          (long unsigned int)function1_elapsed);
-
-    printf("\r\n\tFunction 2:\r\n");
-    printf("\t\tStart:\t%s\r" , ctime(&function2_start_time));
-    printf("\t\tFinish:\t%s\r", ctime(&function2_end_time));
-    printf("\t\tElapsed time: %lu[us]\r\n",
-                                          (long unsigned int)function2_elapsed);
-    printf("\r\n");
-
-    relative_1_2 =
-            ((((double)(function1_elapsed)) / ((double)(function2_elapsed))) *
-             ((double)100));
-    relative_2_1 =
-            ((((double)(function2_elapsed)) / ((double)(function1_elapsed))) *
-             ((double)100));
-
-
-    printf("\tFunction %u is %.10f%% aka %.2fx faster than Function %u.\r\n\n\n",
-                          ((relative_1_2 < 100) ? 1 : 2),
-                          ((relative_1_2 < 100) ? (relative_2_1 - 100) :
-                                                          (relative_1_2 - 100)),
-                          ((relative_1_2 < 100) ?
-                                        ((double)relative_2_1 / 100.F) :
-                                                ((double)relative_1_2 / 100.F)),
-                          ((relative_1_2 < 100) ? 2 : 1));
+    free(performance_data);
 
     #ifdef __linux__
-    printf("Press any key to continue.\r\n");
-    system("read -r -n 1 -s");
+    terminal_echo_on();
     #endif
+
+    ec_io_printf_instant(cursor_visible());
 }
-
-
 
 #ifdef __cplusplus
 }

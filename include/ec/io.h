@@ -25,7 +25,10 @@
 #ifndef ECLIBC_IO_H
 #define ECLIBC_IO_H 1
 
+#include <stdint.h>
+#include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <ec/vector.h>
 #include <ec/internal/vprintf_internal.h>
 
@@ -73,6 +76,63 @@ extern "C"
 #define ec_putc_unlocked(_ch, _fp) putc(_ch, _fp)
 #endif
 
+
+#ifdef XC16
+
+typedef void (*__ec_xc16_printf_handler_t)(uint8_t);
+
+/**
+ * @brief ec_xc16_toggle_stderr     Switches from stdout to stderr and vice
+ *                                  versa.
+ * @param [in]state                 true:  stderr is selected
+ *                                  false: stdout is selected
+ */
+void ec_xc16_toggle_stderr(bool state);
+
+/**
+ * @brief ec_xc16_set_stdout_handler    This function is used to set the
+ *                                      function used for stdout.
+ * @param [in]handler                   The function that will handle the
+ *                                      transmission of characters.
+ */
+void ec_xc16_set_stdout_handler(__ec_xc16_printf_handler_t handler);
+
+/**
+ * @brief ec_xc16_set_stderr_handler    This function is used to set the
+ *                                      function used for stderr.
+ * @param [in]handler                   The function that will handle the
+ *                                      transmission of characters.
+ */
+void ec_xc16_set_stderr_handler(__ec_xc16_printf_handler_t handler);
+
+#endif
+
+/**
+ * @brief ec_generate_progress_bar      Generate a progress bar with the given
+ *                                      width, on the given progress count.
+ *                                      Since some progress bars are generated
+ *                                      using UTF characters, the characters
+ *                                      of choice must be given in string
+ *                                      format and NOT character format.
+ *                                      If you are going for UTF characters,
+ *                                      make sure you have enough space in the
+ *                                      given pointer.
+ * @param [out]ptr                      The pointer to hold the progress bar.
+ * @param [in]progress                  Current progress, in percent. (0-100)
+ * @param [in]width                     Width of the progress bar itself.
+ * @param [in]character_empty           The character to be used for the empty
+ *                                      space of the bar.
+ * @param [in]character_filled          The character to be used for the filled
+ *                                      space of the bar.
+ * @example
+ *      ec_generate_progress_bar(ptr, 20, 10, "-", "#")   =
+ *              "##--------"
+ *      ec_generate_progress_bar(ptr, 60, 15, "▱", "▰") =
+ *              "▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱"
+ */
+void ec_generate_progress_bar(char *ptr, double progress, int width,
+                                 const char *character_empty,
+                                 const char *character_filled);
 
 #if defined(__linux__) || defined(_WIN32)
 

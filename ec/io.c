@@ -29,13 +29,115 @@
 #include <string.h>
 
 #include <ec/io.h>
-#include <ec/printf.h>
 #include <ec/vector.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#ifdef XC16
+__ec_xc16_printf_handler_t __ec_xc16_stdout_handler = EC_NULL;
+__ec_xc16_printf_handler_t __ec_xc16_stderr_handler = EC_NULL;
+
+__ec_xc16_printf_handler_t *__ec_xc16_printf_handler =
+                                        &__ec_xc16_stdout_handler;
+
+/**
+ * @brief ec_xc16_toggle_stderr     Switches from stdout to stderr and vice
+ *                                  versa.
+ * @param [in]state                 true:  stderr is selected
+ *                                  false: stdout is selected
+ */
+void ec_xc16_toggle_stderr(bool state)
+{
+    if(state == true)
+        __ec_xc16_printf_handler = &__ec_xc16_stderr_handler;
+    else
+        __ec_xc16_printf_handler = &__ec_xc16_stdout_handler;
+}
+
+/**
+ * @brief ec_xc16_set_stdout_handler    This function is used to set the
+ *                                      function used for stdout.
+ * @param [in]handler                   The function that will handle the
+ *                                      transmission of characters.
+ */
+void ec_xc16_set_stdout_handler(__ec_xc16_printf_handler_t handler)
+{
+    __ec_xc16_stdout_handler = handler;
+}
+
+/**
+ * @brief ec_xc16_set_stderr_handler    This function is used to set the
+ *                                      function used for stderr.
+ * @param [in]handler                   The function that will handle the
+ *                                      transmission of characters.
+ */
+void ec_xc16_set_stderr_handler(__ec_xc16_printf_handler_t handler)
+{
+    __ec_xc16_stderr_handler = handler;
+}
+
+/**
+ * @brief write         This function remaps the stdout stream in XC16 compiler
+ * @param [in]handle    internal file descriptor, not needed on XC16
+ * @param [in]buffer    The buffer to be printed
+ * @param [in]len       Buffer length
+ * @return              Printed length
+ */
+int
+__attribute__((__section__(".libc.write")))
+    write(
+__attribute__((unused)) int handle,
+        void *buffer, unsigned int len)
+{
+    unsigned int i;
+
+    for (i = len; i; --i)
+    {
+        if((*__ec_xc16_printf_handler) != EC_NULL)
+            (*__ec_xc16_printf_handler)(*(uint8_t *)buffer++);
+    }
+    return ((int)len);
+}
+#endif
+
+/**
+ * @brief ec_generate_progress_bar      Generate a progress bar with the given
+ *                                      width, on the given progress count.
+ *                                      Since some progress bars are generated
+ *                                      using UTF characters, the characters
+ *                                      of choice must be given in string
+ *                                      format and NOT character format.
+ *                                      If you are going for UTF characters,
+ *                                      make sure you have enough space in the
+ *                                      given pointer.
+ * @param [out]ptr                      The pointer to hold the progress bar.
+ * @param [in]progress                  Current progress, in percent. (0-100)
+ * @param [in]width                     Width of the progress bar itself.
+ * @param [in]character_empty           The character to be used for the empty
+ *                                      space of the bar.
+ * @param [in]character_filled          The character to be used for the filled
+ *                                      space of the bar.
+ * @example
+ *      ec_generate_progress_bar(ptr, 20, 10, "-", "#")   =
+ *              "##--------"
+ *      ec_generate_progress_bar(ptr, 60, 15, "▱", "▰") =
+ *              "▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱"
+ */
+void ec_generate_progress_bar(char *ptr, double progress, int width,
+                                 const char *character_empty,
+                                 const char *character_filled)
+{
+    int index;
+    int filledCount = (int)(width * (progress / (double)100));
+    ptr[0] = '\0';
+    for(index = 0; index < filledCount; index++)
+        strcat(ptr, character_filled);
+    for(; index < width; index++)
+        strcat(ptr, character_empty);
+}
 
 #if defined(__linux__) || defined(_WIN32)
 
@@ -260,7 +362,7 @@ void ec_io_flush_stderr()
  */
 void ec_io_vprintf_instant(const char *__restrict format, va_list argptr)
 {
-    vprintf(format, argptr);
+    ec_vprintf(format, argptr);
     fflush(stdout);
 }
 
@@ -291,7 +393,7 @@ void ec_io_printf_instant(const char* format, ...)
  */
 void ec_io_gotoxy(int x, int y)
 {
-    ec_io_printf_instant("\033[" printf_int(1,1) ";" printf_int(1,1) "H", y, x);
+    ec_io_printf_instant("\033[%d;%dH", y, x);
 }
 
 /**

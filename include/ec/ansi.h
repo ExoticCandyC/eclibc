@@ -29,7 +29,6 @@
 #endif
 
 #include <stdint.h>
-#include <ec/printf.h>
 
 #ifndef ECLIBC_ANSI_H
 #define ECLIBC_ANSI_H 1
@@ -96,13 +95,13 @@ extern "C"
  * @def cursor_invisible()
  * @brief   the ansi sequence used to make the cursor invisible.
  */
-#define cursor_invisible()           "\x1B[?25l"
+#define cursor_invisible()           "\033[?25l"
 
 /**
  * @def cursor_visible()
  * @brief   the ansi sequence used to make the cursor visible.
  */
-#define cursor_visible()             "\x1B[?25h"
+#define cursor_visible()             "\033[?25h"
 
 /**
  * @def cursor_goto(x, y)
@@ -119,8 +118,7 @@ extern "C"
  *          accompanied by "cursor_goto_expand(x, y)" to define the X and Y of
  *          the target.
  */
-#define cursor_goto_variable()       "\033[" printf_uint8(1,1) ";" \
-                                             printf_uint8(1,1) "H"
+#define cursor_goto_variable()       "\033[%hu;%huH"
 
 /**
  * @def cursor_goto_expand(x, y)
@@ -162,28 +160,28 @@ extern "C"
  * @brief   Generates the required format for the printf function to accept a
  *          uint8_t value to move the cursor up by that amount.
  */
-#define cursor_move_up_variable()    "\033[" printf_uint8(1,1) "A"
+#define cursor_move_up_variable()    "\033[%huA"
 
 /**
  * @def cursor_move_down_variable()
  * @brief   Generates the required format for the printf function to accept a
  *          uint8_t value to move the cursor down by that amount.
  */
-#define cursor_move_down_variable()  "\033[" printf_uint8(1,1) "B"
+#define cursor_move_down_variable()  "\033[%huB"
 
 /**
  * @def cursor_move_right_variable()
  * @brief   Generates the required format for the printf function to accept a
  *          uint8_t value to move the cursor right by that amount.
  */
-#define cursor_move_right_variable() "\033[" printf_uint8(1,1) "C"
+#define cursor_move_right_variable() "\033[%huC"
 
 /**
  * @def cursor_move_left_variable()
  * @brief   Generates the required format for the printf function to accept a
  *          uint8_t value to move the cursor left by that amount.
  */
-#define cursor_move_left_variable()  "\033[" printf_uint8(1,1) "D"
+#define cursor_move_left_variable()  "\033[%huD"
 
 /**
  * @def clear_screen()
@@ -233,231 +231,231 @@ extern "C"
  * @brief   The escape sequence to reset all text decorations applied inside
  *          the terminal.
  */
-#define color_reset()                "\x1B[0m"
+#define color_reset()                "\033[0m"
 
 /**
  * @def color_text_black()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_black()           "\x1B[30m"
+#define color_text_black()           "\033[30m"
 
 /**
  * @def color_text_red()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_red()             "\x1B[31m"
+#define color_text_red()             "\033[31m"
 
 /**
  * @def color_text_green()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_green()           "\x1B[32m"
+#define color_text_green()           "\033[32m"
 
 /**
  * @def color_text_yellow()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_yellow()          "\x1B[33m"
+#define color_text_yellow()          "\033[33m"
 
 /**
  * @def color_text_blue()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_blue()            "\x1B[34m"
+#define color_text_blue()            "\033[34m"
 
 /**
  * @def color_text_magenta()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_magenta()         "\x1B[35m"
+#define color_text_magenta()         "\033[35m"
 
 /**
  * @def color_text_cyan()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_cyan()            "\x1B[36m"
+#define color_text_cyan()            "\033[36m"
 
 /**
  * @def color_text_white()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_white()           "\x1B[37m"
+#define color_text_white()           "\033[37m"
 
 /**
  * @def color_text_light_black()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_black()     "\x1B[90m"
+#define color_text_light_black()     "\033[90m"
 
 /**
  * @def color_text_light_red()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_red()       "\x1B[91m"
+#define color_text_light_red()       "\033[91m"
 
 /**
  * @def color_text_light_green()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_green()     "\x1B[92m"
+#define color_text_light_green()     "\033[92m"
 
 /**
  * @def color_text_light_yellow()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_yellow()    "\x1B[93m"
+#define color_text_light_yellow()    "\033[93m"
 
 /**
  * @def color_text_light_blue()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_blue()      "\x1B[94m"
+#define color_text_light_blue()      "\033[94m"
 
 /**
  * @def color_text_light_magenta()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_magenta()   "\x1B[95m"
+#define color_text_light_magenta()   "\033[95m"
 
 /**
  * @def color_text_light_cyan()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_cyan()      "\x1B[96m"
+#define color_text_light_cyan()      "\033[96m"
 
 /**
  * @def color_text_light_white()
  * @brief   The escape sequence to change the text color to the aforementioned
  *          color.
  */
-#define color_text_light_white()     "\x1B[97m"
+#define color_text_light_white()     "\033[97m"
 
 /**
  * @def color_bg_black()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_black()             "\x1B[100m"
+#define color_bg_black()             "\033[100m"
 
 /**
  * @def color_bg_red()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_red()               "\x1B[101m"
+#define color_bg_red()               "\033[101m"
 
 /**
  * @def color_bg_green()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_green()             "\x1B[102m"
+#define color_bg_green()             "\033[102m"
 
 /**
  * @def color_bg_yellow()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_yellow()            "\x1B[103m"
+#define color_bg_yellow()            "\033[103m"
 
 /**
  * @def color_bg_blue()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_blue()              "\x1B[104m"
+#define color_bg_blue()              "\033[104m"
 
 /**
  * @def color_bg_magenta()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_magenta()           "\x1B[105m"
+#define color_bg_magenta()           "\033[105m"
 
 /**
  * @def color_bg_cyan()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_cyan()              "\x1B[106m"
+#define color_bg_cyan()              "\033[106m"
 
 /**
  * @def color_bg_white()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_white()             "\x1B[107m"
+#define color_bg_white()             "\033[107m"
 
 /**
  * @def color_bg_light_black()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_black()       "\x1B[40m"
+#define color_bg_light_black()       "\033[40m"
 
 /**
  * @def color_bg_light_red()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_red()         "\x1B[41m"
+#define color_bg_light_red()         "\033[41m"
 
 /**
  * @def color_bg_light_green()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_green()       "\x1B[42m"
+#define color_bg_light_green()       "\033[42m"
 
 /**
  * @def color_bg_light_yellow()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_yellow()      "\x1B[43m"
+#define color_bg_light_yellow()      "\033[43m"
 
 /**
  * @def color_bg_light_blue()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_blue()        "\x1B[44m"
+#define color_bg_light_blue()        "\033[44m"
 
 /**
  * @def color_bg_light_magenta()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_magenta()     "\x1B[45m"
+#define color_bg_light_magenta()     "\033[45m"
 
 /**
  * @def color_bg_light_cyan()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_cyan()        "\x1B[46m"
+#define color_bg_light_cyan()        "\033[46m"
 
 /**
  * @def color_bg_light_white()
  * @brief   The escape sequence to change the background color to the
  *          aforementioned color.
  */
-#define color_bg_light_white()       "\x1B[47m"
+#define color_bg_light_white()       "\033[47m"
 
 /**
  * @brief ansi_4bit_color_t     a description over a character array that is

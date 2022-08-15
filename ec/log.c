@@ -2,7 +2,6 @@
 #include <ec/log.h>
 
 #include <ec/io.h>
-#include <ec/printf.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -27,15 +26,14 @@ void eclogprintf(const char *CXXsuffix, const char* header, const char* project,
         target = stderr;
     #endif
     va_start(argptr, format);
-    ec_fprintf(target, printf_string(), CXXsuffix);
+    ec_fprintf(target, "%s", CXXsuffix);
     if(filename != EC_NULL)
-        ec_fprintf(target, printf_string() ":" printf_string(),
-                                        filename, (lineNumber == 0 ? " " : ""));
+        ec_fprintf(target, "%s:%s", filename, (lineNumber == 0 ? " " : ""));
     if(lineNumber != 0)
-        ec_fprintf(target, printf_uint16(1,1) ": ", lineNumber);
+        ec_fprintf(target, "%u: ", lineNumber);
     if(project != EC_NULL)
-        ec_fprintf(target, printf_string() ": ", project);
-    ec_fprintf(target, printf_string() ": ", header);
+        ec_fprintf(target, "%s: ", project);
+    ec_fprintf(target, "%s: ", header);
     ec_vfprintf(target, format, argptr);
     ec_fprintf(target, "\r\n");
     va_end(argptr);

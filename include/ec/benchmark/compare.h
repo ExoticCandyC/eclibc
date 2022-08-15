@@ -22,11 +22,9 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||           \
-       defined(__TI_COMPILER_VERSION__)) && defined(__STRICT_ANSI__) &&       \
-       (defined(_WIN32) || defined(__linux__))
-#pragma GCC diagnostic ignored "-Wlong-long"
-#endif
+#include <ec/io.h>
+#include <ec/preprocessor.h>
+#include <stdlib.h>
 
 #ifndef ECLIBC_BENCHMARK_COMPARE_H
 #define ECLIBC_BENCHMARK_COMPARE_H 1
@@ -57,33 +55,35 @@ extern "C"
 /* This module is designed ONLY for PC targets */
 #if (defined(__linux__) || defined(_WIN32))
 
+
 /**
- * @brief ec_performance_compare    This function takes two functions, and runs
- *                                  them multiple times. After the iterations
- *                                  are done, it will compare the results of
- *                                  both functions and gives the user a full
- *                                  statistics on the performance of each
- *                                  function, and their performance relative to
- *                                  each other.
- *                                  Please note that the functions should NOT
- *                                  take any arguments and should return no
- *                                  values as well. So, you should make wrapper
- *                                  functions for the functions that dont meet
- *                                  this criteria and then pass the wrapper
- *                                  functions to this function.
- * @param [in]function1             The first function to be used during the
- *                                  test.
- * @param [in]function2             The second function to be used during the
- *                                  test.
- * @param [in]iteration             Number of times each function is executed.
- * @param [in]innerItterations      Number of times each function is being
- *                                  executed by the wrapper. The default value
- *                                  is 0.
+ * @def ec_performance_compare(__iterations, __multiplyer, ...)
+ *
+ * @brief       This function accepts a variable number of functions and runs
+ *              them multiple times and gives out detailed statistics about the
+ *              performance of each function.
+ *              Please note that the functions should NOT take any arguments
+ *              and should return no values as well. So, you should make
+ *              wrapper functions for the functions that dont meet this
+ *              criteria and then pass the wrapper functions to this function.
+ *
+ * @warning     If the user doesn't provide at least one function to this macro,
+ *              it will cause a compile time error.
+ *
+ * @param [in]__iterations      Number of times each function is executed.
+ * @param [in]__multiplyer      Number of times each function is being executed
+ *                              by the wrapper.
  */
-void ec_performance_compare(void (*function1)(void),
-                            void (*function2)(void),
-                            long long int iteration,
-                            long long int innerItterations);
+#define ec_performance_compare(__iterations, __multiplyer, ...)                \
+      __ec_performance_compare(__iterations, __multiplyer,                     \
+                     (__EC_VA_NARGS__(__VA_ARGS__)), #__VA_ARGS__, __VA_ARGS__)
+
+__attribute__((noinline))
+void
+__ec_performance_compare
+    (const uint64_t __iterations, const uint64_t __multiplyer,
+     const uint32_t __nargs, const char * __restrict __arg_names, ...);
+
 
 #endif
 

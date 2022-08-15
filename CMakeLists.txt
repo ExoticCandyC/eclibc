@@ -392,7 +392,7 @@ if("x__${ARGV4}__x" MATCHES "x__eclibc__x")
 else()
     if(${ARGV1} MATCHES SHARED)
         install(
-            CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV4}.so.${PROJECT_VERSION} ${EC_TARGET_LIBRARY_PATH}/libeclibc.so.${PROJECT_VERSION} 2> /dev/null\")"
+            CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV5}.so.${PROJECT_VERSION} ${EC_TARGET_LIBRARY_PATH}/libeclibc.so.${PROJECT_VERSION} 2> /dev/null\")"
             TARGETS ${ARGV4}
         )
     install(
@@ -400,7 +400,7 @@ else()
         TARGETS ${ARGV4}
     )
 install(
-    CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV4}.so.${PROJECT_VERSION_MAJOR} ${EC_TARGET_LIBRARY_PATH}/libeclibc.so.${PROJECT_VERSION_MAJOR} 2> /dev/null\")"
+    CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV5}.so.${PROJECT_VERSION_MAJOR} ${EC_TARGET_LIBRARY_PATH}/libeclibc.so.${PROJECT_VERSION_MAJOR} 2> /dev/null\")"
     TARGETS ${ARGV4}
 )
 install(
@@ -408,7 +408,7 @@ install(
     TARGETS ${ARGV4}
 )
 install(
-    CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV4}.so ${EC_TARGET_LIBRARY_PATH}/libeclibc.so 2> /dev/null\")"
+    CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV5}.so ${EC_TARGET_LIBRARY_PATH}/libeclibc.so 2> /dev/null\")"
     TARGETS ${ARGV4}
 )
 install(
@@ -417,7 +417,7 @@ install(
 )
 else()
     install(
-        CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV4}.a ${EC_TARGET_LIBRARY_PATH}/libeclibc.a 2> /dev/null\")"
+        CODE "execute_process(COMMAND bash -c \"ln -s ${EC_TARGET_LIBRARY_PATH}/lib${ARGV5}.a ${EC_TARGET_LIBRARY_PATH}/libeclibc.a 2> /dev/null\")"
         TARGETS ${ARGV4}
     )
 install(
