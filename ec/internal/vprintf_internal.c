@@ -3,7 +3,7 @@
  ** @copyright
  ** This file is part of the "eclibc" project.
  ** Copyright (C) 2022 ExoticCandy
- ** @email  ExoticCandyC.dev@gmail.com
+ ** @email  admin@ecandy.ir
  **
  ** Project's home page:
  ** https://github.com/ExoticCandyC/eclibc

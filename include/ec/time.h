@@ -3,7 +3,7 @@
  ** @copyright
  ** This file is part of the "eclibc" project.
  ** Copyright (C) 2022 ExoticCandy
- ** @email  ExoticCandyC.dev@gmail.com
+ ** @email  admin@ecandy.ir
  **
  ** Project's home page:
  ** https://github.com/ExoticCandyC/eclibc
@@ -70,6 +70,74 @@ extern const char *ec_month_name_str[];
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifndef ECLIBC_INTERNAL_COMPILE
+
+#if defined(__XTENSA__)
+
+#elif defined(XC16)
+
+#ifndef FCY
+#    ifndef EC_XC16_PERIPHRAL_FREQUENCY
+#        error "To use <ec/time.h> to add delay functions, you need to define \
+the periphral clock frequency in compile flags, e.q. \
+-DEC_XC16_PERIPHRAL_FREQUENCY=4000000"
+#    endif
+#    define FCY EC_XC16_PERIPHRAL_FREQUENCY
+#endif
+#include <libpic30.h>
+#include <stdint.h>
+#include <xc.h>
+
+#ifndef __delay_ns
+#define __delay_ns(_ns)  __asm__("nop")
+#endif
+#define __delay_s(time) ____ec_delay_s((uint32_t)time)
+
+static inline void
+__attribute__ ((unused, always_inline))
+____ec_delay_s(uint32_t time)
+{
+    while(time > 0)
+    {
+        time--;
+        __delay_ms(1000);
+        ClrWdt();
+    }
+}
+
+
+#elif defined(XC32)
+
+#elif defined(__cplusplus)
+
+#include <chrono>
+#include <thread>
+#define __delay_ns(_ns) \
+    std::this_thread::sleep_for(std::chrono::nanoseconds(_ns))
+#define __delay_us(_us) \
+    std::this_thread::sleep_for(std::chrono::microseconds(_us))
+#define __delay_ms(_ms) \
+    std::this_thread::sleep_for(std::chrono::milliseconds(_ms))
+#define __delay_s(_s)   \
+    std::this_thread::sleep_for(std::chrono::milliseconds(_s * 1000))
+
+#else
+
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE
+#endif
+#include <time.h>
+#include <unistd.h>
+
+#define __delay_ns(_ns) __asm__("nop")
+#define __delay_us(_us) usleep((__useconds_t)_us)
+#define __delay_ms(_ms) __delay_us((_ms * 1000))
+#define __delay_s(_s)   __delay_ms((_s * 1000))
+
+#endif
+
 #endif
 
 #endif
