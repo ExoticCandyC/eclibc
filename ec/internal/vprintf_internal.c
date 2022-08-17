@@ -506,8 +506,8 @@ __ec_printf_perform(FILE *__restrict __stream,
                 return true;
             }
 
-            case eclibc_printf_time_seconds:
-            case eclibc_printf_time_seconds_short:
+            case eclibc_printf_Time_struct_tm:
+            case eclibc_printf_time_struct_tm_short:
             {
                 char mode[4] = "";
                 __ec_scratch_memory = va_arg(__arg, struct tm);
@@ -527,7 +527,7 @@ __ec_printf_perform(FILE *__restrict __stream,
                 __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
                 ec_fputc(':', __stream);
                 __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
-                if(__ec_args->format_chr == eclibc_printf_time_seconds)
+                if(__ec_args->format_chr == eclibc_printf_Time_struct_tm)
                 {
                     ec_fputc(':', __stream);
                     __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
@@ -536,8 +536,8 @@ __ec_printf_perform(FILE *__restrict __stream,
                 return true;
             }
 
-            case eclibc_printf_Time_struct_tm:
-            case eclibc_printf_time_struct_tm_short:
+            case eclibc_printf_time_seconds:
+            case eclibc_printf_time_seconds_short:
             {
                 char mode[4] = "";
                 uint32_t tempInt = va_arg(__arg, uint32_t);
@@ -560,7 +560,7 @@ __ec_printf_perform(FILE *__restrict __stream,
                 __ec_printf_digits(__ec_scratch_memory.tm_hour, 2);
                 ec_fputc(':', __stream);
                 __ec_printf_digits(__ec_scratch_memory.tm_min, 2);
-                if(__ec_args->format_chr == eclibc_printf_Time_struct_tm)
+                if(__ec_args->format_chr == eclibc_printf_time_seconds)
                 {
                     ec_fputc(':', __stream);
                     __ec_printf_digits(__ec_scratch_memory.tm_sec, 2);
