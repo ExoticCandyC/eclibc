@@ -36,6 +36,7 @@
 #include <ec/ansi.h>
 #include <unistd.h>
 #include <ec/benchmark/compare.h>
+#include <ec/linux.h>
 
 #define __ec_compare_function_name_max_len 20
 

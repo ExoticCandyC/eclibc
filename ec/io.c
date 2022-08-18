@@ -26,7 +26,7 @@
 #define _XOPEN_SOURCE
 #endif
 
-#include <string.h>
+#include <ec/string.h>
 
 #include <ec/io.h>
 #include <ec/vector.h>
@@ -259,73 +259,6 @@ void ec_popen_multi_line(char *command, ec_api_vector **respond_vector,
     } while(ptr != EC_NULL);
     pclose(fp);
     free(respond);
-}
-
-#endif
-
-#ifdef __linux__
-
-/**
- * @brief ec_io_get_terminal_name   Puts the value of $TERM in the given
- *                                  pointer. Note that this function only works
- *                                  on GNU Linux.
- * @param [out]ptr                  The pointer to the string that is going to
- *                                  hold the terminal name.
- * @param [in]pointer_size          The size of the string pointer passed to
- *                                  this function.
- */
-void ec_io_get_terminal_name(char *ptr, size_t pointer_size)
-{
-    ec_popen("echo $TERM", ptr, pointer_size);
-    *(ptr + strlen(ptr) - 1) = '\0';
-}
-
-/**
- * @brief ec_io_get_terminal_PID    Gets the process ID of the host terminal.
- * @return                          The process ID of the host terminal.
- */
-int ec_io_get_terminal_PID()
-{
-    return ec_int_popen("echo $$");
-}
-
-/**
- * @brief ec_io_get_terminal_rows_count     Gets the number of rows the
- *                               host terminal can show at the current moment.
- * @warning     This value can be wrong in the first 10ms of running a program
- *              inside a newly invoked fullscreen terminal. For exampled:
- *              "gnome-terminal --full-screen -- program.out"
- *              Can get the gnome-terminal's default rows count instead of the
- *              actual rows count if this function is invoked as a program
- *              constructor.
- *              Generally speaking, this value becomes valid as soon as a buffer
- *              is printed, or almost always after 10ms of delays after running
- *              the terminal.
- * @return      The number of rows the host terminal has at the current moment.
- */
-int ec_io_get_terminal_rows_count()
-{
-    return ec_int_popen("tput lines");
-}
-
-/**
- * @brief ec_io_get_terminal_columns_count    Gets the number of columns the
- *                               host terminal can show at the current moment.
- * @warning     This value can be wrong in the first 10ms of running a program
- *              inside a newly invoked fullscreen terminal. For exampled:
- *              "gnome-terminal --full-screen -- program.out"
- *              Can get the gnome-terminal's default columns count instead of
- *              the actual columns count if this function is invoked as a
- *              program constructor.
- *              Generally speaking, this value becomes valid as soon as a buffer
- *              is printed, or almost always after 10ms of delays after running
- *              the terminal.
- * @return      The number of columns the host terminal has at the current
- *              moment.
- */
-int ec_io_get_terminal_columns_count()
-{
-    return ec_int_popen("tput cols");
 }
 
 #endif
