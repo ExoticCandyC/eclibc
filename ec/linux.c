@@ -261,11 +261,13 @@ ec_net_interface_name(char *ptr, int ifIndex)
                 if(ifIndex-- == 0)
                 {
                     strcpy(ptr, p);
+                    fclose(f);
                     return true;
                 }
             }
         }
     }
+    fclose(f);
     *ptr = '\0';
     return false;
 }

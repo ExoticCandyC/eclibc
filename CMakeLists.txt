@@ -756,6 +756,22 @@ EC_API_LOAD_MINGW_32()
 EC_API_LOAD_MICROCHIP()
 EC_API_LOAD_ESP()
 
+if (TARGET eclibcMinGW32)
+    TARGET_LINK_LIBRARIES(eclibcMinGW32         ws2_32)
+endif()
+
+if (TARGET eclibcMinGW32Static)
+    TARGET_LINK_LIBRARIES(eclibcMinGW32Static   ws2_32)
+endif()
+
+if (TARGET eclibc32MinGW32)
+    TARGET_LINK_LIBRARIES(eclibc32MinGW32       ws2_32)
+endif()
+
+if (TARGET eclibc32MinGW32Static)
+    TARGET_LINK_LIBRARIES(eclibc32MinGW32Static ws2_32)
+endif()
+
 ################################################################################
 # updating operating system library files
 ################################################################################
