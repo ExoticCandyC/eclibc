@@ -17,6 +17,7 @@ EC_API_ADD_HEADER_FILE(preprocessor.h)
 EC_API_ADD_HEADER_FILE(string.h)
 EC_API_ADD_HEADER_FILE(linux.h)
 EC_API_ADD_HEADER_FILE(socket.h)
+EC_API_ADD_HEADER_FILE(url.h)
 
 
 

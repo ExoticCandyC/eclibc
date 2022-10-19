@@ -1,4 +1,4 @@
-/* <vsprintf_internal.c> -*- C -*- */
+/* <vurlprintf_internal.c> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -26,8 +26,8 @@
 #include <ec/internal/text_parse/itoa.h>
 #include <ec/internal/text_parse/ftoa.h>
 #include <ec/internal/print_format_table.h>
-#include <ec/internal/vsprintf_internal.h>
-#include <ec/internal/spad_string.h>
+#include <ec/internal/vurlprintf_internal.h>
+#include <ec/internal/urlpad_string.h>
 #include <ec/internal/pad_string.h>
 #include <ec/types.h>
 #include <ec/utf8.h>
@@ -43,22 +43,12 @@ extern "C"
     {                                                                          \
         __ec_printf_numBuffer = ec_itoa_##_type (EC_SCRATCH_1(_type),          \
                         __ec_printf_numBuffer_End, _base, _upperCase);         \
-        __ec_printf_numBuffer = ec_pad_num_string(                             \
-                                              __ec_args->NumberRight,          \
-                    __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
-        ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',                       \
-                    __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
+        ec_urlfpad_string(__s, __ec_printf_numBuffer);                         \
     }
 
 #define __ec_sprintf_string()                                                  \
     {                                                                          \
-        size_t __temp = strlen(EC_SCRATCH_1(char *));                          \
-        if(__ec_args->NumberRight == 0 ||                                      \
-                                     (size_t)__ec_args->NumberRight > __temp)  \
-            __ec_args->NumberRight = (int)__temp;                              \
-        ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',                       \
-                                                      EC_SCRATCH_1(char *),    \
-                             (EC_SCRATCH_1(char *) + __ec_args->NumberRight)); \
+        ec_urlfpad_string(__s, EC_SCRATCH_1(char *));                          \
     }
 
 #define __ec_sprintf_double()                                                  \
@@ -66,24 +56,19 @@ extern "C"
         __ec_printf_numBuffer = ec_ftoa(EC_SCRATCH_1(double),                  \
                                          __ec_printf_numBuffer_End,            \
                                                      __ec_args->NumberRight);  \
-        ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',                       \
-                                     __ec_printf_numBuffer,                    \
-                                              __ec_printf_numBuffer_End);      \
+        ec_urlfpad_string(__s, __ec_printf_numBuffer);                         \
     }
 
 #define __ec_sprintf_digits(value, digitsCount)                                \
     {                                                                          \
         __ec_printf_numBuffer = ec_itoa_uint64_t ((uint64_t)value,             \
                         __ec_printf_numBuffer_End, 10, 0);                     \
-        __ec_printf_numBuffer = ec_pad_num_string(digitsCount,                 \
-                    __ec_printf_numBuffer, __ec_printf_numBuffer_End);         \
-        ec_sfpad_string(__s, 0, ' ', __ec_printf_numBuffer,                    \
-                                                   __ec_printf_numBuffer_End); \
+        ec_urlfpad_string(__s, __ec_printf_numBuffer);                         \
     }
 
 static inline bool
 __attribute__ ((hot,unused,always_inline))
-__ec_sprintf_perform(char *__restrict __s,
+__ec_urlprintf_perform(char *__restrict __s,
                           __ec_printf_args *__restrict __ec_args, va_list __arg)
 {
     /* as much to satisfy a 64 bit binary and more */
@@ -115,13 +100,12 @@ __ec_sprintf_perform(char *__restrict __s,
             }
 
             case glibc_printf_form_percent:
-                strcat(__s, "%");
+                strcat(__s, "%25");
                 return true;
 
             case glibc_printf_form_character:
             {
-                ec_spad_character(__s, __ec_args->NumberLeft, ' ',
-                                                    (char)(va_arg(__arg, int)));
+                ec_urlpad_character(__s, (char)(va_arg(__arg, int)));
                 return true;
             }
 
@@ -173,11 +157,9 @@ __ec_sprintf_perform(char *__restrict __s,
             {
                 EC_SCRATCH_1(uint64_t) = va_arg(__arg, uint64_t);
                 if(EC_SCRATCH_1(int) == 0)
-                    ec_spad_len_str(__s, __ec_args->NumberLeft,
-                                                            ' ', "False", 5);
+                    ec_urlpad_len_str(__s, "False");
                 else
-                    ec_spad_len_str(__s, __ec_args->NumberLeft,
-                                                            ' ', "True", 4);
+                    ec_urlpad_len_str(__s, "True");
                 return true;
             }
 
@@ -278,11 +260,9 @@ __ec_sprintf_perform(char *__restrict __s,
             {
                 EC_SCRATCH_1(int) = va_arg(__arg, int);
                 if(EC_SCRATCH_1(int) == 0)
-                    ec_spad_len_str(__s, __ec_args->NumberLeft,
-                                                            ' ', "False", 5);
+                    ec_urlpad_len_str(__s, "False");
                 else
-                    ec_spad_len_str(__s, __ec_args->NumberLeft,
-                                                            ' ', "True", 4);
+                    ec_urlpad_len_str(__s, "True");
                 return true;
             }
 
@@ -291,8 +271,7 @@ __ec_sprintf_perform(char *__restrict __s,
                 char UTF8_temp[5];
                 EC_SCRATCH_1(ec_utf8_t) = va_arg(__arg, ec_utf8_t);
                 ea_utf8_decode(EC_SCRATCH_1(ec_utf8_t), UTF8_temp);
-                ec_spad_len_str(__s, __ec_args->NumberLeft,
-                                                            ' ', UTF8_temp, 1);
+                ec_urlpad_len_str(__s, UTF8_temp);
                 return true;
             }
 
@@ -311,8 +290,7 @@ __ec_sprintf_perform(char *__restrict __s,
                 if(phoneHead < (tempPhone + 19 - __ec_args->NumberLeft))
                     phoneHead = (tempPhone + 19 - __ec_args->NumberLeft);
                 strcat(__s, "+");
-                ec_sfpad_string(__s, __ec_args->NumberLeft, '0',
-                                                phoneHead, (tempPhone + 19));
+                ec_urlfpad_string(__s, phoneHead);
                 return true;
             }
 
@@ -337,8 +315,7 @@ __ec_sprintf_perform(char *__restrict __s,
                 *--IP_head = '.';
                 __EC_PRINTF_READ_NUM(1);
                 #undef __EC_PRINTF_READ_NUM
-                ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',
-                                IP_head, tempIP + 16);
+                ec_urlfpad_string(__s, IP_head);
                 return true;
             }
 
@@ -361,8 +338,7 @@ __ec_sprintf_perform(char *__restrict __s,
                 __EC_PRINTF_READ_NUM(2); *--IP_head = ':';
                 __EC_PRINTF_READ_NUM(1);
                 #undef __EC_PRINTF_READ_NUM
-                ec_sfpad_string(__s, __ec_args->NumberLeft, ' ',
-                                IP_head, tempIP + 40);
+                ec_urlfpad_string(__s, IP_head);
                 return true;
             }
 
@@ -382,7 +358,7 @@ __ec_sprintf_perform(char *__restrict __s,
                         (EC_SCRATCH_1(ec_mac_t)).display_string.byte##INDEX ,  \
                                 MAC_head, 16, ((__ec_args->format_chr ==       \
                                  eclibc_printf_MAC_PC_Version_caps) ? 1 : 0)); \
-                ec_sfpad_string(__s, 2, ' ', MAC_head, tempMAC + 2);
+                ec_urlfpad_string(__s, MAC_head);
 
                 __EC_PRINTF_PRINT_NUM(1);
                 strcat(__s, ":");
@@ -416,7 +392,7 @@ __ec_sprintf_perform(char *__restrict __s,
                         (EC_SCRATCH_1(ec_mac_t)).cisco_string.byte##INDEX ,    \
                                 MAC_head, 16, ((__ec_args->format_chr ==       \
                                       eclibc_printf_MAC_CISCO_caps) ? 1 : 0)); \
-                ec_sfpad_string(__s, 3, ' ', MAC_head, tempMAC + 3);
+                ec_urlfpad_string(__s, MAC_head);
 
                 __EC_PRINTF_PRINT_NUM(1);
                 strcat(__s, ".");
@@ -638,7 +614,7 @@ __ec_sprintf_perform(char *__restrict __s,
 
 __attribute__((hot,noinline))
 int
-ec_vsprintf(char *__restrict __dst, const char *__restrict __src,
+ec_vurlprintf(char *__restrict __dst, const char *__restrict __src,
                                                                  va_list __arg)
 {
     const char *__restrict __ec_printf_temp_buffer_tail = __src;
@@ -674,7 +650,7 @@ ec_vsprintf(char *__restrict __dst, const char *__restrict __src,
                       __ec_printf_extract_format (__ec_printf_temp_buffer,
                                                              &__ec_args, __arg);
 
-            if(__ec_sprintf_perform(__dst, &__ec_args, __arg) == false)
+            if(__ec_urlprintf_perform(__dst, &__ec_args, __arg) == false)
                 strncat (__dst, __ec_printf_temp_buffer, (size_t)
                       (__ec_printf_temp_buffer_temp - __ec_printf_temp_buffer));
 
@@ -686,12 +662,12 @@ ec_vsprintf(char *__restrict __dst, const char *__restrict __src,
 
 __attribute__((hot,noinline))
 int
-ec_sprintf(char *__restrict __dst, const char *__restrict __src, ...)
+ec_urlprintf(char *__restrict __dst, const char *__restrict __src, ...)
 {
     int result;
     va_list argptr;
     va_start(argptr, __src);
-    result = ec_vsprintf(__dst, __src, argptr);
+    result = ec_vurlprintf(__dst, __src, argptr);
     va_end(argptr);
     return result;
 }

@@ -1,4 +1,4 @@
-/* <spad_string.h> -*- C -*- */
+/* <urlpad_string.h> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -26,8 +26,8 @@
 #include <ec/io.h>
 #include <ec/arch.h>
 
-#ifndef ECLIBC_INTERNAL_SPAD_STRING_H
-#define ECLIBC_INTERNAL_SPAD_STRING_H 1
+#ifndef ECLIBC_INTERNAL_URLPAD_STRING_H
+#define ECLIBC_INTERNAL_URLPAD_STRING_H 1
 
 
 #ifdef __cplusplus
@@ -61,56 +61,57 @@ extern "C"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #include <stdint.h>
+
 static inline void
 __attribute__ ((unused, always_inline))
-ec_sfpad_string(char *__restrict __s, int padSize, char padChar,
-                char *__restrict start, char *__restrict end)
+url_encode_chr(char source, char *destination)
 {
-    int rpad = padSize - (int)(start - end);
-    char *__restrict lpad = end - padSize;
-    while(lpad++ < start)
-        strncat(__s, &padChar, 1);
-    strncat(__s, start, (size_t)(end - start));
-    while(rpad++ < 0)
-        strncat(__s, &padChar, 1);
+    uint8_t ptr = (uint8_t)source;
+    const char *temp = "0123456789ABCDEF";
+    destination = destination + strlen(destination);
+    if((ptr >= 'a' && ptr <= 'z') ||
+       (ptr >= 'A' && ptr <= 'Z') ||
+       (ptr >= '0' && ptr <= '9'))
+    {
+        *destination++ = (char)ptr;
+    }
+    else
+    {
+        *destination++ = '%';
+        *destination++ = temp[ptr / 0x10];
+        *destination++ = temp[ptr % 0x10];
+    }
+    *destination = '\0';
 }
 
 static inline void
 __attribute__ ((unused, always_inline))
-ec_spad_len_str(char *__restrict __s, int padSize, char padChar,
-                const char * __restrict str, size_t len)
+url_encode(const char *__restrict source, char *destination)
 {
-    char *__restrict __start;
-    if(padSize > (int)len)
+    const uint8_t *ptr = (const uint8_t *)source;
+    const char *temp = "0123456789ABCDEF";
+    destination = destination + strlen(destination);
+    while(*ptr != '\0')
     {
-        __start = __s + strlen(__s);
-        memset(__start, padChar, (size_t)(padSize - (int)len));
-        __start[(padSize - (int)len)] = '\0';
+        if((*ptr >= 'a' && *ptr <= 'z') ||
+           (*ptr >= 'A' && *ptr <= 'Z') ||
+           (*ptr >= '0' && *ptr <= '9'))
+        {
+            *destination++ = (char)*ptr++;
+        }
+        else
+        {
+            *destination++ = '%';
+            *destination++ = temp[*ptr   / 0x10];
+            *destination++ = temp[*ptr++ % 0x10];
+        }
     }
-    strcat(__s, str);
-    while(padSize++ < (int)((((int)len) * -1) - 1))
-        strncat(__s, &padChar, 1);
+    *destination = '\0';
 }
 
-static inline void
-__attribute__ ((unused, always_inline))
-ec_spad_character(char *__restrict __s, int padSize, char padChar,
-                                                                char character)
-{
-    char *__restrict __start = __s + strlen(__s);
-    if(padSize > 1)
-    {
-        memset(__start, padChar, (size_t)(padSize - 1));
-        __start[(padSize - 1)] = '\0';
-    }
-    strncat(__s, &character, 1);
-    __start++;
-    if(padSize < -2)
-    {
-        memset(__start, padChar, (size_t)((padSize + 2) * -1));
-        __start[((padSize + 2) * -1)] = '\0';
-    }
-}
+#define ec_urlfpad_string(__s, str)   url_encode(str, __s)
+#define ec_urlpad_len_str(__s, str)   url_encode(str, __s)
+#define ec_urlpad_character(__s, chr) url_encode_chr(chr, __s)
 
 #if !(defined(XC16) || defined(XC32))
 #pragma GCC diagnostic pop
