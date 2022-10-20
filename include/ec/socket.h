@@ -3,6 +3,11 @@
 
 #if defined(__WIN32) || defined(__linux__)
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -45,5 +50,10 @@ void       tcp_client_send        (TCP_Client *client, const char *msg);
 size_t     tcp_client_receive_sync(TCP_Client *client, char *ptr, size_t ptrlen);
 size_t     tcp_client_receive     (TCP_Client *client, char *ptr, size_t ptrlen,
                                       int timeout_sec, int timeout_usec);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

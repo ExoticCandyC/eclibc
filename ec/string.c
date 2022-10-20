@@ -1,4 +1,4 @@
-/* <string.h> -*- C -*- */
+/* <string.c> -*- C -*- */
 /**
  ** @copyright
  ** This file is part of the "eclibc" project.
@@ -22,40 +22,18 @@
  ** along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include <string.h>
-#include <stdbool.h>
-#include <ec/internal/vsprintf_internal.h>
-
-#ifndef ECLIBC_STRING_H
-#define ECLIBC_STRING_H 1
+#include <ec/string.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-/* Since different compilers and different platforms implement NULL in a
- * different manner, EC_NULL is a helping macro to unify the NULL pointer over
- * all platforms.
- * E.g. some platforms have __builtin_null (like XC16) and some define it the
- *      same exact way.
- */
-#ifndef EC_NULL
-#define EC_NULL ((void *)0)
-#endif
-
-/* All CPP compilers on the other hand, use the same exact NULL pointer on all
- * platforms. So, there is no need to change the course of standard C++ library.
- */
-#ifdef __cplusplus
-#undef EC_NULL
-#define EC_NULL NULL
-#endif
-
-bool ec_str_starts_with(const char *ptr, const char *refference);
+bool ec_str_starts_with(const char *ptr, const char *refference)
+{
+    return (strncmp(refference, ptr, strlen(refference)) == 0);
+}
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
